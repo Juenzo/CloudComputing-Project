@@ -19,7 +19,7 @@ Maxi'Learning est une plateforme d’e-learning collaborative pensée pour être
 ## Fonctionnalités
 
 ### A. Gestion des cours
-- Création d’un cours avec titre, description, catégorie, niveau (débutant/intermédiaire/expert).
+- Création d’un cours avec titre, description, catégorie.
 - Téléversement de ressources (PDF, vidéo).
 - Ajout de chapitres (texte, liens, quiz associés).
 - Édition après publication et historique des modifications (versioning simplifié).
@@ -31,15 +31,15 @@ Maxi'Learning est une plateforme d’e-learning collaborative pensée pour être
 - Évaluation finale avec calcul du score et (optionnel) certificat après réussite.
 
 ### C. Quiz et évaluation
-- QCM avec nombre de questions paramétrable.
+- Un quiz par cours.
 - Calcul automatique du score et affichage du résultat.
 - Suivi de la progression via stockage des tentatives.
 
-### D. Partage et collaboration
-- Partage public via lien.
-- Invitation de contributeurs pour co-créer.
-- Possibilité de « fork » d’un cours pour le réutiliser et le modifier.
-
-### E. Chatbot d’assistance
+### D. Chatbot d’assistance
 - Basé sur Azure OpenAI Service ou Azure Bot Framework.
 - Répond aux questions, résume un chapitre, propose un plan d’étude, réalisation de QCM.
+
+### Architecture
+- Terraform : Création automatiquement de toute l’infrastructure sur Azure à partir d’un fichier de configuration (Azure App Service, Azure SQL Database, Azure Blob Storage, Azure OpenAI ...).
+- Backend (Python) : sert d’API REST entre le frontend et les services Azure.
+- Frontend (React) : interface utilisateur
