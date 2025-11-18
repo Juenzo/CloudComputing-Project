@@ -30,8 +30,16 @@ resource "azurerm_resource_group" "rg" {
 # Storage Account
 ########################
 
+resource "random_string" "pg_suffix" {
+  length  = 4
+  upper   = false
+  numeric  = true
+  special = false
+}
+
+
 resource "azurerm_storage_account" "sa" {
-  name                     = var.storage_account_name
+  name                     = "${var.storage_account_name_}${random_string.pg_suffix.result}"
   resource_group_name      = azurerm_resource_group.rg.name
   location                 = azurerm_resource_group.rg.location
   account_tier             = "Standard"
@@ -66,15 +74,8 @@ resource "azurerm_storage_blob" "evaluation_pdf" {
 # PostgreSQL Flexible Server
 ########################
 
-resource "random_string" "pg_suffix" {
-  length  = 4
-  upper   = false
-  numeric = true
-  special = false
-}
-
 resource "azurerm_postgresql_flexible_server" "pg" {
-  name                = "pg-elearning-${random_string.pg_suffix.result}"
+  name                = "pg-elearning_${random_string.pg_suffix.result}"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
 

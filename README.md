@@ -43,3 +43,16 @@ Maxi'Learning est une plateforme d’e-learning collaborative pensée pour être
 - Terraform : Création automatiquement de toute l’infrastructure sur Azure à partir d’un fichier de configuration (Azure App Service, Azure SQL Database, Azure Blob Storage, Azure OpenAI ...).
 - Backend (Python) : sert d’API REST entre le frontend et les services Azure.
 - Frontend (React) : interface utilisateur
+
+
+### Initalisation 
+
+#### Lancer l'infrastructure sur Azure
+```bash
+cd infra
+terraform init
+terraform plan
+terraform apply
+```
+
+####
