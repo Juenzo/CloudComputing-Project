@@ -13,7 +13,7 @@ variable "location" {
 variable "storage_account_name" {
   type        = string
   description = "Nom du storage account (unique, lowercase)"
-  default     = "elearningstorage1234"
+  default     = "elearningstorage"
 }
 
 variable "postgres_admin_login" {
