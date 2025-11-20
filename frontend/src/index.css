@@ -1,59 +1,548 @@
-/* src/index.css */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #f7f7fb;
-  color: #111827;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI", sans-serif;
 }
 
 .app {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: var(--background-gradient);
+  color: var(--text-color);
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
-.header,
-.footer {
-  background: #111827;
-  color: #ffffff;
-  padding: 1rem 2rem;
-}
-
-.logo {
-  margin: 0;
-}
-
-.main {
-  flex: 1;
-  padding: 2rem;
-  max-width: 960px;
+.container {
+  width: 100%;
+  max-width: 1100px;
   margin: 0 auto;
+  padding: 0 1.5rem;
 }
 
-.course-grid {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  margin-top: 1rem;
+
+.app.theme-dark {
+  --background-gradient: radial-gradient(
+    circle at top left,
+    #1d283a,
+    #020617 45%,
+    #000 100%
+  );
+  --text-color: #e5e7eb;
+
+  --header-bg: linear-gradient(
+    to right,
+    rgba(15, 23, 42, 0.94),
+    rgba(15, 23, 42, 0.85)
+  );
+  --header-border: rgba(148, 163, 184, 0.3);
+
+  --nav-btn-bg: radial-gradient(circle at 0 0, #1f2937, #020617);
+  --nav-btn-border: rgba(148, 163, 184, 0.6);
+  --nav-btn-shadow: 0 10px 30px rgba(15, 23, 42, 0.7);
+  --nav-btn-hover-border: rgba(59, 130, 246, 0.85);
+  --nav-btn-hover-shadow: 0 18px 45px rgba(59, 130, 246, 0.4);
+
+  --footer-bg: linear-gradient(
+    to right,
+    rgba(15, 23, 42, 0.95),
+    rgba(15, 23, 42, 0.9)
+  );
+  --footer-border: rgba(148, 163, 184, 0.3);
+
+  --github-bg: radial-gradient(circle at 30% 0, #f9fafb, #9ca3af 45%, #020617);
+  --github-border: rgba(148, 163, 184, 0.7);
+  --github-icon: #020617;
+
+  --toggle-bg: radial-gradient(circle at 0 0, #020617, #111827);
+  --toggle-border: rgba(148, 163, 184, 0.7);
+  --toggle-label: #e5e7eb;
+
+  --nav-btn-hover-bg: radial-gradient(circle at 0 0, #111827, #020617);
+
+  --nav-primary-bg: linear-gradient(135deg, #22c55e, #3b82f6);
+  --nav-primary-hover-bg: linear-gradient(135deg, #16a34a, #1d4ed8);
 }
 
-.course-card {
-  background: #ffffff;
-  border-radius: 0.75rem;
-  padding: 1rem;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+.app.theme-light {
+  --background-gradient: radial-gradient(
+    circle at top left,
+    #e0f2fe,
+    #f9fafb 45%,
+    #ffffff 100%
+  );
+  --text-color: #0f172a;
+
+  --header-bg: rgba(255, 255, 255, 0.92);
+  --header-border: rgba(148, 163, 184, 0.35);
+
+  --nav-btn-bg: radial-gradient(circle at 0 0, #eff6ff, #e0f2fe);
+  --nav-btn-border: rgba(148, 163, 184, 0.9);
+  --nav-btn-shadow: 0 10px 30px rgba(148, 163, 184, 0.35);
+  --nav-btn-hover-border: rgba(59, 130, 246, 0.9);
+  --nav-btn-hover-shadow: 0 18px 45px rgba(59, 130, 246, 0.45);
+
+  --footer-bg: rgba(255, 255, 255, 0.95);
+  --footer-border: rgba(148, 163, 184, 0.35);
+
+  --github-bg: radial-gradient(circle at 30% 0, #0f172a, #1e293b 45%, #0b1120);
+  --github-border: rgba(15, 23, 42, 0.7);
+  --github-icon: #f9fafb;
+
+  --toggle-bg: radial-gradient(circle at 0 0, #e0f2fe, #ffffff);
+  --toggle-border: rgba(148, 163, 184, 0.9);
+  --toggle-label: #0f172a;
+
+  --nav-btn-hover-bg: radial-gradient(circle at 0 0, #dbeafe, #bfdbfe);
+
+  --nav-primary-bg: linear-gradient(135deg, #3b82f6, #60a5fa);
+  --nav-primary-hover-bg: linear-gradient(135deg, #2563eb, #1d4ed8);
 }
 
-.level {
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(20px);
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--header-border);
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 0;
+  gap: 1.5rem;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* les logos trop beau*/
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f9fafb;
+}
+
+.app.theme-light .logo {
+  color: #0f172a;
+}
+
+.logo-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 0, #a5b4fc, #4f46e5);
+  box-shadow: 0 0 18px rgba(129, 140, 248, 0.75);
+}
+
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.nav-link {
+  padding: 0.45rem 1.25rem;
+  border-radius: 999px;
+  border: 1px solid var(--nav-btn-border);
   font-size: 0.9rem;
-  color: #6b7280;
+  font-weight: 500;
+  background: var(--nav-btn-bg);
+  box-shadow: var(--nav-btn-shadow);
+  transition: transform 150ms ease, box-shadow 150ms ease,
+    border-color 150ms ease, background 150ms ease;
 }
 
-.error {
-  color: red;
+.nav-link:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: var(--nav-btn-hover-shadow);
+  border-color: var(--nav-btn-hover-border);
+  background: var(--nav-btn-hover-bg);
 }
 
-.footer {
-  text-align: center;
+.nav-link-primary {
+  border: none;
+  color: #f9fafb;
+  background: var(--nav-primary-bg);
+  box-shadow: 0 14px 35px rgba(56, 189, 248, 0.45);
+}
+
+.nav-link-primary:hover {
+  background: var(--nav-primary-hover-bg);
+  box-shadow: 0 20px 50px rgba(37, 99, 235, 0.55);
+}
+
+.theme-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.6rem 0.15rem 0.2rem;
+  border-radius: 999px;
+  border: 1px solid var(--toggle-border);
+  background: var(--toggle-bg);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.35);
+  outline: none;
+}
+
+.theme-toggle-label {
+  padding: 0 0.25rem 0 0.3rem;
+  color: var(--toggle-label);
+}
+
+.theme-toggle-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  background: rgba(15, 23, 42, 0.9);
+  color: #f9fafb;
+  transition: background 0.2s ease, transform 0.2s ease, color 0.2s ease;
+}
+
+.app.theme-light .theme-toggle-thumb {
+  background: #fde68a; 
+  color: #92400e;
+  box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.5);
+}
+
+
+.theme-toggle:hover .theme-toggle-thumb {
+  transform: translateY(-1px);
+}
+
+
+.app-main {
+  flex: 1;
+}
+
+.app-main .container {
+  padding-top: 2rem;
+  padding-bottom: 2.5rem;
+}
+
+/* FOOTER */
+.app-footer {
+  border-top: 1px solid var(--footer-border);
+  background: var(--footer-bg);
+}
+
+.footer-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 0;
+  font-size: 0.85rem;
+  color: #9ca3af;
+  gap: 1rem;
+}
+
+
+.github-link {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--github-border);
+  background: var(--github-bg);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.9);
+  transition: transform 150ms ease, box-shadow 150ms ease,
+    border-color 150ms ease, background 150ms ease;
+}
+
+.github-link:hover {
+  transform: translateY(-1px) scale(1.05);
+  box-shadow: 0 18px 45px rgba(148, 163, 184, 0.7);
+  border-color: #f9fafb;
+}
+
+.github-icon {
+  width: 18px;
+  height: 18px;
+  fill: var(--github-icon);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .footer-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+/* ===========================
+   Page : Création de cours
+   =========================== */
+
+.course-create {
+  padding: 2.5rem 0 3rem;
+  display: flex;
+  justify-content: center;
+}
+
+.course-create-card {
+  width: 100%;
+  max-width: 620px;
+  border-radius: 18px;
+  padding: 1.8rem 2.1rem;
+  border: 1px solid var(--header-border);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(18px);
+}
+
+/* Variante selon le thème */
+
+.app.theme-dark .course-create-card {
+  background: radial-gradient(
+      circle at top left,
+      rgba(148, 163, 184, 0.08),
+      rgba(15, 23, 42, 0.96)
+    );
+}
+
+.app.theme-light .course-create-card {
+  background: radial-gradient(
+      circle at top left,
+      rgba(191, 219, 254, 0.35),
+      rgba(255, 255, 255, 0.96)
+    );
+}
+
+/* Header du formulaire */
+
+.course-create-header h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.5rem;
+}
+
+.course-create-header p {
+  margin: 0 0 1.4rem;
+  font-size: 0.9rem;
+  color: #9ca3af;
+}
+
+/* Formulaire */
+
+.course-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.course-form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .course-form-row {
+    flex-direction: column;
+  }
+}
+
+.course-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+}
+
+.course-form-group label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.course-form-group input,
+.course-form-group textarea,
+.course-form-group select {
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  padding: 0.6rem 0.8rem;
+  font-size: 0.95rem;
+  outline: none;
+  background: rgba(15, 23, 42, 0.04);
+  color: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.app.theme-dark .course-form-group input,
+.app.theme-dark .course-form-group textarea,
+.app.theme-dark .course-form-group select {
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.app.theme-light .course-form-group input,
+.app.theme-light .course-form-group textarea,
+.app.theme-light .course-form-group select {
+  background: rgba(248, 250, 252, 0.95);
+}
+
+.course-form-group input::placeholder,
+.course-form-group textarea::placeholder {
+  color: #9ca3af;
+}
+
+.course-form-group textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.course-form-group input:focus,
+.course-form-group textarea:focus,
+.course-form-group select:focus {
+  border-color: rgba(59, 130, 246, 0.9);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35);
+}
+
+/* Bouton */
+
+.course-form-actions {
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.course-btn-primary {
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.4rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: #f9fafb;
+  background: var(--nav-primary-bg);
+  box-shadow: 0 14px 35px rgba(37, 99, 235, 0.55);
+  transition: transform 0.12s ease, box-shadow 0.12s ease,
+    background 0.12s ease, opacity 0.12s ease;
+}
+
+.course-btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px) scale(1.02);
+  background: var(--nav-primary-hover-bg);
+  box-shadow: 0 20px 50px rgba(37, 99, 235, 0.7);
+}
+
+.course-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.35);
+}
+
+/* Erreur */
+
+.course-form-error {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.7);
+  color: #fecaca;
+}
+
+.app.theme-light .course-form-error {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+
+/* Champ fichier custom */
+
+.file-input-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.file-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  cursor: pointer;
+  background: radial-gradient(circle at 0 0, rgba(15, 23, 42, 0.85), #020617);
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.6);
+  transition: transform 0.12s ease, box-shadow 0.12s ease,
+    border-color 0.12s ease, background 0.12s ease;
+}
+
+.app.theme-light .file-input-wrapper {
+  background: radial-gradient(circle at 0 0, #eff6ff, #e0f2fe);
+  box-shadow: 0 10px 25px rgba(148, 163, 184, 0.4);
+}
+
+.file-input-wrapper:hover {
+  transform: translateY(-1px) scale(1.01);
+  border-color: rgba(59, 130, 246, 0.9);
+  box-shadow: 0 16px 35px rgba(37, 99, 235, 0.45);
+}
+
+.file-input-button {
+  padding: 0.3rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f9fafb;
+  background: var(--nav-primary-bg);
+  white-space: nowrap;
+}
+
+.app.theme-light .file-input-button {
+  color: #f9fafb;
+}
+
+.file-input-name {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
