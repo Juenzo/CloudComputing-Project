@@ -1,6 +1,5 @@
 terraform {
   required_version = ">= 1.5.0"
-
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -31,15 +30,15 @@ resource "azurerm_resource_group" "rg" {
 ########################
 
 resource "random_string" "pg_suffix" {
-  length  = 4
-  upper   = false
-  numeric  = true
-  special = false
+  length      = 4
+  upper       = false
+  numeric     = true
+  special     = false
+  min_numeric = 4
 }
 
-
 resource "azurerm_storage_account" "sa" {
-  name                     = "${var.storage_account_name_}${random_string.pg_suffix.result}"
+  name                     = "${var.storage_account_name}${random_string.pg_suffix.result}"
   resource_group_name      = azurerm_resource_group.rg.name
   location                 = azurerm_resource_group.rg.location
   account_tier             = "Standard"
@@ -47,21 +46,18 @@ resource "azurerm_storage_account" "sa" {
   min_tls_version          = "TLS1_2"
 }
 
-# Container data (quizz etc.)
 resource "azurerm_storage_container" "data" {
   name                  = "data"
   storage_account_name  = azurerm_storage_account.sa.name
   container_access_type = "private"
 }
 
-# Container content (PDF)
 resource "azurerm_storage_container" "content" {
   name                  = "content"
   storage_account_name  = azurerm_storage_account.sa.name
   container_access_type = "private"
 }
 
-# Upload de ton PDF evaluation.pdf
 resource "azurerm_storage_blob" "evaluation_pdf" {
   name                   = "pdf/evaluation.pdf"
   storage_account_name   = azurerm_storage_account.sa.name
@@ -71,40 +67,72 @@ resource "azurerm_storage_blob" "evaluation_pdf" {
 }
 
 ########################
-# PostgreSQL Flexible Server
+# SQL Server (MSSQL)
 ########################
 
-resource "azurerm_postgresql_flexible_server" "pg" {
-  name                = "pg-elearning_${random_string.pg_suffix.result}"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
-
-  sku_name = "B_Standard_B1ms"
-
-  administrator_login    = var.postgres_admin_login
-  administrator_password = var.postgres_admin_password
-
-  storage_mb = 32768
-  version    = "16"
-
-  backup_retention_days        = 7
-  geo_redundant_backup_enabled = false
-
-  zone = 1
-
-  authentication {
-    password_auth_enabled = true
-  }
+resource "azurerm_mssql_server" "sqlserver" {
+  name                         = "sql-srv-${azurerm_resource_group.rg.name}-${random_string.pg_suffix.result}" # Ajout suffixe pour unicité
+  resource_group_name          = azurerm_resource_group.rg.name
+  location                     = azurerm_resource_group.rg.location
+  version                      = "12.0"
+  administrator_login          = var.bdd_admin_login
+  administrator_login_password = var.bdd_admin_password
 }
 
-resource "azurerm_postgresql_flexible_server_database" "db" {
-  name      = "elearningdb"
-  server_id = azurerm_postgresql_flexible_server.pg.id
+resource "azurerm_mssql_database" "db" {
+  name        = "elearning_bdd"
+  server_id   = azurerm_mssql_server.sqlserver.id
+  collation   = "SQL_Latin1_General_CP1_CI_AS"
+  sku_name    = "Basic"
+  max_size_gb = 2
 }
 
-resource "azurerm_postgresql_flexible_server_firewall_rule" "allow_azure" {
-  name             = "allow-azure-services"
-  server_id        = azurerm_postgresql_flexible_server.pg.id
+resource "azurerm_mssql_firewall_rule" "allow_azure_ips" {
+  name             = "AllowAzureServices"
+  server_id        = azurerm_mssql_server.sqlserver.id
   start_ip_address = "0.0.0.0"
   end_ip_address   = "0.0.0.0"
+}
+
+########################
+# App Service (Backend API Python)
+########################
+
+resource "azurerm_service_plan" "api_plan" {
+  name                = "plan-${var.app_service_name}-${random_string.pg_suffix.result}"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  os_type             = "Linux"
+  sku_name            = "B1"
+}
+
+resource "azurerm_linux_web_app" "api" {
+  name                = "${var.app_service_name}-${random_string.pg_suffix.result}"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  service_plan_id     = azurerm_service_plan.api_plan.id
+  https_only          = true
+
+  site_config {
+    application_stack {
+      python_version = "3.11"
+    }
+    always_on        = false
+    app_command_line = "python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000"
+  }
+
+  app_settings = {
+    "SCM_DO_BUILD_DURING_DEPLOYMENT" = "true" # Important pour que Azure installe les requirements.txt
+    "WEBSITES_PORT"                  = "8000"
+    
+    # Infos de connexion BDD pour votre code Python
+    "DB_SERVER"   = azurerm_mssql_server.sqlserver.fully_qualified_domain_name
+    "DB_NAME"     = azurerm_mssql_database.db.name
+    "DB_USER"     = var.bdd_admin_login
+    "DB_PASSWORD" = var.bdd_admin_password
+    
+    # Pour lier le stockage si besoin (facultatif pour le moment)
+    "STORAGE_ACCOUNT_NAME" = azurerm_storage_account.sa.name
+    "STORAGE_ACCOUNT_KEY"  = azurerm_storage_account.sa.primary_access_key
+  }
 }
