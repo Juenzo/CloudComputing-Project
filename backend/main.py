@@ -1,38 +1,42 @@
 import os
-import urllib.parse
-from fastapi import FastAPI, HTTPException
+from urllib.parse import quote_plus # Déplacé en haut pour la propreté
+from fastapi import FastAPI
 from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker, declarative_base
+from pathlib import Path
+from dotenv import load_dotenv
+
+# --- CHARGEMENT DU FICHIER .ENV ---
+# On cherche le fichier .env dans le dossier parent (racine du projet)
+env_path = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
 # --- CONFIGURATION BDD ---
-# Récupération des variables injectées par Terraform
-server = os.getenv("DB_SERVER")
-database = os.getenv("DB_NAME")
-username = os.getenv("DB_USER")
-password = os.getenv("DB_PASSWORD")
+# Récupération des variables (Les noms correspondent à votre .env)
+server = os.getenv("sql_server_fqdn")     # Vient de l'output Terraform
+database = os.getenv("sql_database_name") # Vient de l'output Terraform
+username = os.getenv("DB_USER")           # Défini manuellement
+password = os.getenv("DB_PASSWORD")       # Défini manuellement
 
-# Encodage du mot de passe pour éviter les erreurs avec les caractères spéciaux
-params = urllib.parse.quote_plus(
-    f"Driver={{ODBC Driver 17 for SQL Server}};"
-    f"Server={server},1433;"
-    f"Database={database};"
-    f"Uid={username};"
-    f"Pwd={password};"
-    f"Encrypt=yes;"
-    f"TrustServerCertificate=no;"
-    f"Connection Timeout=30;"
-)
+# Debug : Si le chargement échoue, on arrête tout de suite avec un message clair
+if not password or not server:
+    print(f"ERREUR : Impossible de lire le fichier .env à : {env_path}")
+    print(f"Server: {server}, User: {username}, Pass: {password}")
+    raise ValueError("Les variables d'environnement sont vides.")
 
-# Chaîne de connexion SQLAlchemy
-SQLALCHEMY_DATABASE_URL = f"mssql+pyodbc:///?odbc_connect={params}"
+# Encodage du mot de passe
+encoded_password = quote_plus(password)
 
-# Création du moteur SQL
+# Construction de l'URL (pymssql)
+SQLALCHEMY_DATABASE_URL = f"mssql+pymssql://{username}:{encoded_password}@{server}/{database}"
+
+# Création du moteur
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# --- DÉFINITION DU MODÈLE (La Table) ---
+# --- DÉFINITION DU MODÈLE ---
 class User(Base):
     __tablename__ = "users"
 
@@ -40,7 +44,6 @@ class User(Base):
     name = Column(String(100))
     email = Column(String(100))
 
-# Modèle Pydantic pour l'API (Validation des données reçues)
 class UserCreate(BaseModel):
     name: str
     email: str
@@ -48,16 +51,13 @@ class UserCreate(BaseModel):
 # --- INITIALISATION APP ---
 app = FastAPI()
 
-# C'est ICI que la magie opère :
-# Au démarrage, SQLAlchemy vérifie si les tables existent. 
-# Sinon, il les crée. (C'est l'init BDD)
+# Init BDD au démarrage
 try:
     Base.metadata.create_all(bind=engine)
     print("Base de données initialisée avec succès.")
 except Exception as e:
     print(f"Erreur lors de l'init BDD : {e}")
 
-# Dépendance pour récupérer une session DB par requête
 def get_db():
     db = SessionLocal()
     try:
@@ -66,7 +66,6 @@ def get_db():
         db.close()
 
 # --- ROUTES API ---
-
 @app.get("/")
 def read_root():
     return {"message": "Backend Python Azure est en ligne !"}
@@ -74,14 +73,24 @@ def read_root():
 @app.get("/users")
 def read_users():
     db = SessionLocal()
-    users = db.query(User).all()
-    return users
+    try:
+        users = db.query(User).all()
+        return users
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        db.close()
 
 @app.post("/users")
 def create_user(user: UserCreate):
     db = SessionLocal()
-    db_user = User(name=user.name, email=user.email)
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+    try:
+        db_user = User(name=user.name, email=user.email)
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+        return db_user
+    except Exception as e:
+        return {"error": str(e)}
+    finally:
+        db.close()

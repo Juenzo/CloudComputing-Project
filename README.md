@@ -50,11 +50,38 @@ Maxi'Learning est une plateforme d’e-learning collaborative pensée pour être
 #### Lancer l'infrastructure sur Azure
 ```bash
 cd infra
-terraform init
+az login
 terraform taint random_string.pg_suffix
+terraform init
 terraform plan
 terraform apply
-zip -r app.zip .
-az webapp deployment source config-zip --resource-group mon-projet-azure-rg --name <NOM_APP_SERVICE> --src app.zip
 ```
-
+Ajouter son IP pour pouvoir accéder à la base de données
+```bash
+# 1. Récupérer les noms depuis Terraform (pour ne pas les taper à la main)
+>> Push-Location infra
+>> $RgName  = (terraform output -raw resource_group_name).Trim()
+>> $SqlFQDN = (terraform output -raw sql_server_fqdn).Trim()
+>> $SqlServerName = $SqlFQDN.Split('.')[0]
+>> Pop-Location
+>>
+>> # 2. Détecter votre IP publique actuelle
+>> Write-Host "Détection de votre IP publique..." -ForegroundColor Yellow
+>> $MyIp = (Invoke-WebRequest -Uri "https://api.ipify.org").Content
+>> Write-Host "Votre IP est : $MyIp" -ForegroundColor Cyan
+>>
+>> # 3. Créer la règle pare-feu
+>> Write-Host "Ajout de la règle pare-feu sur Azure..." -ForegroundColor Yellow
+>> az sql server firewall-rule create `
+>>     --resource-group $RgName `
+>>     --server $SqlServerName `
+>>     --name "DevLocalIP" `
+>>     --start-ip-address $MyIp `
+>>     --end-ip-address $MyIp
+>>
+>> Write-Host "C'est fait ! Vous pouvez lancer le backend en local." -ForegroundColor Green
+```
+Lancer le backend en local 
+```bash
+uvicorn backend.main:app --reload
+```
