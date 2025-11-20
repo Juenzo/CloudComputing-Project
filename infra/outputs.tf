@@ -14,14 +14,24 @@ output "evaluation_pdf_url" {
   value = azurerm_storage_blob.evaluation_pdf.url
 }
 
-output "postgres_server_fqdn" {
-  value = azurerm_postgresql_flexible_server.pg.fqdn
+output "api_hostname" {
+  value = azurerm_linux_web_app.api.default_hostname
 }
 
-output "postgres_database_name" {
-  value = azurerm_postgresql_flexible_server_database.db.name
+output "api_url" {
+  value = "https://${azurerm_linux_web_app.api.default_hostname}"
 }
 
-output "postgres_admin_user" {
-  value = "${var.postgres_admin_login}@${azurerm_postgresql_flexible_server.pg.name}"
+output "api_name" {
+  value = azurerm_linux_web_app.api.name
+}
+
+output "sql_server_fqdn" {
+  description = "L'adresse du serveur SQL pour s'y connecter (ex: avec DBeaver)"
+  value       = azurerm_mssql_server.sqlserver.fully_qualified_domain_name
+}
+
+output "sql_database_name" {
+  description = "Le nom de la BDD"
+  value       = azurerm_mssql_database.db.name
 }

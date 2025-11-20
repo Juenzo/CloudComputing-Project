@@ -51,8 +51,10 @@ Maxi'Learning est une plateforme d’e-learning collaborative pensée pour être
 ```bash
 cd infra
 terraform init
+terraform taint random_string.pg_suffix
 terraform plan
 terraform apply
+zip -r app.zip .
+az webapp deployment source config-zip --resource-group mon-projet-azure-rg --name <NOM_APP_SERVICE> --src app.zip
 ```
 
-####
