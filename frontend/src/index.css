@@ -489,3 +489,60 @@ a {
   color: #b91c1c;
   background: #fee2e2;
 }
+
+/* Champ fichier custom */
+
+.file-input-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.file-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  cursor: pointer;
+  background: radial-gradient(circle at 0 0, rgba(15, 23, 42, 0.85), #020617);
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.6);
+  transition: transform 0.12s ease, box-shadow 0.12s ease,
+    border-color 0.12s ease, background 0.12s ease;
+}
+
+.app.theme-light .file-input-wrapper {
+  background: radial-gradient(circle at 0 0, #eff6ff, #e0f2fe);
+  box-shadow: 0 10px 25px rgba(148, 163, 184, 0.4);
+}
+
+.file-input-wrapper:hover {
+  transform: translateY(-1px) scale(1.01);
+  border-color: rgba(59, 130, 246, 0.9);
+  box-shadow: 0 16px 35px rgba(37, 99, 235, 0.45);
+}
+
+.file-input-button {
+  padding: 0.3rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f9fafb;
+  background: var(--nav-primary-bg);
+  white-space: nowrap;
+}
+
+.app.theme-light .file-input-button {
+  color: #f9fafb;
+}
+
+.file-input-name {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
