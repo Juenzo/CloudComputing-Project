@@ -12,6 +12,7 @@ interface CreateCoursePayload {
 
 interface CourseResponse extends CreateCoursePayload {
   id: string;
+  pdfUrl?: string;
 }
 
 const CourseCreatePage: React.FC = () => {
@@ -40,7 +41,6 @@ const CourseCreatePage: React.FC = () => {
   const handlePdfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setPdfFile(file);
-    // pour debug : console.log(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,12 +49,23 @@ const CourseCreatePage: React.FC = () => {
     setLoading(true);
 
     try {
-      // 🔴 Pour l’instant on n’envoie que les infos texte.
-      // Le PDF pourra être géré plus tard via FormData ou un endpoint dédié.
+      if (!pdfFile) {
+        throw new Error("Merci de sélectionner un PDF pour le cours.");
+      }
+
+      // 👉 Construction du FormData (PDF + champs texte)
+      const formData = new FormData();
+      formData.append("pdf", pdfFile);
+
+      formData.append("title", form.title);
+      formData.append("description", form.description);
+      formData.append("category", form.category);
+      formData.append("level", form.level);
+
       const res = await fetch("/api/courses", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: formData,
+        // ⚠️ NE PAS mettre Content-Type ici, le navigateur le gère (multipart/form-data + boundary)
       });
 
       if (!res.ok) {
@@ -62,8 +73,6 @@ const CourseCreatePage: React.FC = () => {
       }
 
       const created: CourseResponse = await res.json();
-      // TODO backend: associer pdfFile au cours created.id si besoin
-
       navigate(`/courses/${created.id}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Erreur inconnue";
@@ -79,8 +88,8 @@ const CourseCreatePage: React.FC = () => {
         <div className="course-create-header">
           <h2>Créer un cours</h2>
           <p>
-            Renseigne les informations principales du cours. Tu pourras ajouter
-            les chapitres et le quiz ensuite.
+            Uploade un PDF et renseigne quelques infos. Le quiz sera ajouté
+            ensuite.
           </p>
         </div>
 
@@ -138,25 +147,25 @@ const CourseCreatePage: React.FC = () => {
             </div>
           </div>
 
-<div className="course-form-group">
-  <label>Ressource PDF (optionnel)</label>
+          {/* Champ PDF custom */}
+          <div className="course-form-group">
+            <label>Ressource PDF (obligatoire)</label>
 
-  <label htmlFor="pdf" className="file-input-wrapper">
-    <span className="file-input-button">Choisir un PDF</span>
-    <span className="file-input-name">
-      {pdfFile ? pdfFile.name : "Aucun fichier sélectionné"}
-    </span>
-  </label>
+            <label htmlFor="pdf" className="file-input-wrapper">
+              <span className="file-input-button">Choisir un PDF</span>
+              <span className="file-input-name">
+                {pdfFile ? pdfFile.name : "Aucun fichier sélectionné"}
+              </span>
+            </label>
 
-  <input
-    id="pdf"
-    type="file"
-    accept="application/pdf"
-    onChange={handlePdfChange}
-    className="file-input-hidden"
-  />
-</div>
-
+            <input
+              id="pdf"
+              type="file"
+              accept="application/pdf"
+              onChange={handlePdfChange}
+              className="file-input-hidden"
+            />
+          </div>
 
           <div className="course-form-actions">
             <button
