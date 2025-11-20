@@ -7,7 +7,7 @@ CONNECTION_STRING = os.getenv("STORAGE_ACCOUNT_CONNECTION_STRING") # A rajouter 
 # Si tu n'as pas la connection string complète, tu peux la construire avec STORAGE_ACCOUNT_NAME et KEY.
 
 CONTAINER_NAME = os.getenv("content_container_name", "content")
-ACCOUNT_NAME = os.getenv("STORAGE_ACCOUNT_NAME")
+ACCOUNT_NAME = os.getenv("storage_account_name")
 ACCOUNT_KEY = os.getenv("STORAGE_ACCOUNT_KEY") 
 
 def get_blob_client(filename: str):
