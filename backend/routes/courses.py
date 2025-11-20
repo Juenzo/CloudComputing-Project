@@ -1,155 +1,58 @@
 from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlmodel import Session, select
 
-from ..database import get_db
-from ..models import Course, Lesson
-from ..shemas import (
-	CourseCreate,
-	CourseRead,
-	CourseUpdate,
-	LessonCreate,
-	LessonRead,
-	LessonUpdate,
-)
-
+from ..database import get_session
+from ..models import Course, CourseCreate, CourseRead, Lesson, LessonCreate, LessonRead
+from ..services.blob_service import generate_sas_url
 
 router = APIRouter()
 
-
-# Courses endpoints
+# --- COURSES ---
 @router.get("/courses", response_model=List[CourseRead])
-def list_courses(db: Session = Depends(get_db)):
-	return db.query(Course).order_by(Course.id.asc()).all()
+def list_courses(session: Session = Depends(get_session)):
+    courses = session.exec(select(Course)).all()
+    return courses
 
+@router.post("/courses", response_model=CourseRead)
+def create_course(course: CourseCreate, session: Session = Depends(get_session)):
+    db_course = Course.model_validate(course)
+    session.add(db_course)
+    session.commit()
+    session.refresh(db_course)
+    return db_course
 
 @router.get("/courses/{course_id}", response_model=CourseRead)
-def get_course(course_id: int, db: Session = Depends(get_db)):
-	course = db.query(Course).filter(Course.id == course_id).first()
-	if not course:
-		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
-	return course
+def get_course(course_id: int, session: Session = Depends(get_session)):
+    course = session.get(Course, course_id)
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    return course
 
-
-@router.post("/courses", response_model=CourseRead, status_code=status.HTTP_201_CREATED)
-def create_course(payload: CourseCreate, db: Session = Depends(get_db)):
-	exists = db.query(Course).filter(Course.slug == payload.slug).first()
-	if exists:
-		raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Slug already exists")
-	course = Course(
-		slug=payload.slug,
-		title=payload.title,
-		level=payload.level,
-		description=payload.description,
-	)
-	db.add(course)
-	db.commit()
-	db.refresh(course)
-	return course
-
-
-@router.put("/courses/{course_id}", response_model=CourseRead)
-def update_course(course_id: int, payload: CourseUpdate, db: Session = Depends(get_db)):
-	course = db.query(Course).filter(Course.id == course_id).first()
-	if not course:
-		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
-
-	if payload.slug is not None:
-		# Ensure slug uniqueness
-		conflict = db.query(Course).filter(Course.slug == payload.slug, Course.id != course_id).first()
-		if conflict:
-			raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Slug already exists")
-		course.slug = payload.slug
-	if payload.title is not None:
-		course.title = payload.title
-	if payload.level is not None:
-		course.level = payload.level
-	if payload.description is not None:
-		course.description = payload.description
-
-	db.commit()
-	db.refresh(course)
-	return course
-
-
-@router.delete("/courses/{course_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_course(course_id: int, db: Session = Depends(get_db)):
-	course = db.query(Course).filter(Course.id == course_id).first()
-	if not course:
-		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
-	db.delete(course)
-	db.commit()
-	return None
-
-
-# Lessons endpoints
+# --- LESSONS ---
 @router.get("/courses/{course_id}/lessons", response_model=List[LessonRead])
-def list_lessons_for_course(course_id: int, db: Session = Depends(get_db)):
-	# 404 if course not found (explicit)
-	course_exists = db.query(Course.id).filter(Course.id == course_id).first()
-	if not course_exists:
-		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
-	return db.query(Lesson).filter(Lesson.course_id == course_id).order_by(Lesson.sort_order.asc(), Lesson.id.asc()).all()
+def list_lessons(course_id: int, session: Session = Depends(get_session)):
+    statement = select(Lesson).where(Lesson.course_id == course_id).order_by(Lesson.sort_order)
+    lessons = session.exec(statement).all()
+    return lessons
 
+@router.post("/lessons", response_model=LessonRead)
+def create_lesson(lesson: LessonCreate, session: Session = Depends(get_session)):
+    db_lesson = Lesson.model_validate(lesson)
+    session.add(db_lesson)
+    session.commit()
+    session.refresh(db_lesson)
+    return db_lesson
 
-@router.post("/courses/{course_id}/lessons", response_model=LessonRead, status_code=status.HTTP_201_CREATED)
-def create_lesson_for_course(course_id: int, payload: LessonCreate, db: Session = Depends(get_db)):
-	course = db.query(Course).filter(Course.id == course_id).first()
-	if not course:
-		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
-	lesson = Lesson(
-		course_id=course_id,
-		slug=payload.slug,
-		title=payload.title,
-		duration=payload.duration,
-		pdf_blob=payload.pdf_blob,
-		quiz_blob=payload.quiz_blob,
-		sort_order=payload.sort_order or 0,
-	)
-	db.add(lesson)
-	db.commit()
-	db.refresh(lesson)
-	return lesson
-
-
-@router.get("/lessons/{lesson_id}", response_model=LessonRead)
-def get_lesson(lesson_id: int, db: Session = Depends(get_db)):
-	lesson = db.query(Lesson).filter(Lesson.id == lesson_id).first()
-	if not lesson:
-		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lesson not found")
-	return lesson
-
-
-@router.put("/lessons/{lesson_id}", response_model=LessonRead)
-def update_lesson(lesson_id: int, payload: LessonUpdate, db: Session = Depends(get_db)):
-	lesson = db.query(Lesson).filter(Lesson.id == lesson_id).first()
-	if not lesson:
-		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lesson not found")
-
-	if payload.slug is not None:
-		lesson.slug = payload.slug
-	if payload.title is not None:
-		lesson.title = payload.title
-	if payload.duration is not None:
-		lesson.duration = payload.duration
-	if payload.pdf_blob is not None:
-		lesson.pdf_blob = payload.pdf_blob
-	if payload.quiz_blob is not None:
-		lesson.quiz_blob = payload.quiz_blob
-	if payload.sort_order is not None:
-		lesson.sort_order = payload.sort_order
-
-	db.commit()
-	db.refresh(lesson)
-	return lesson
-
-
-@router.delete("/lessons/{lesson_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_lesson(lesson_id: int, db: Session = Depends(get_db)):
-	lesson = db.query(Lesson).filter(Lesson.id == lesson_id).first()
-	if not lesson:
-		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lesson not found")
-	db.delete(lesson)
-	db.commit()
-	return None
+@router.get("/lessons/{lesson_id}/content")
+def get_lesson_content(lesson_id: int, session: Session = Depends(get_session)):
+    """Retourne les URLs signées pour lire les fichiers PDF/Vidéo"""
+    lesson = session.get(Lesson, lesson_id)
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    
+    return {
+        "pdf_url": generate_sas_url(lesson.pdf_filename) if lesson.pdf_filename else None,
+        "video_url": generate_sas_url(lesson.video_filename) if lesson.video_filename else None,
+        "text": lesson.content_text
+    }
