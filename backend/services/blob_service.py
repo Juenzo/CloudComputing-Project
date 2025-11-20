@@ -27,6 +27,16 @@ def upload_file_to_blob(file_obj, filename: str):
     blob_client.upload_blob(file_obj, overwrite=True)
     return filename
 
+def delete_file_from_blob(filename: str):
+    """Supprime un fichier du conteneur Azure"""
+    try:
+        blob_client = get_blob_client(filename)
+        blob_client.delete_blob()
+        return True
+    except Exception as e:
+        print(f"Erreur lors de la suppression du blob {filename}: {e}")
+        return False
+    
 def generate_sas_url(filename: str):
     """Génère une URL temporaire (1h) pour lire le fichier privé"""
     if not ACCOUNT_NAME or not ACCOUNT_KEY:
