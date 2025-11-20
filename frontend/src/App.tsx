@@ -40,7 +40,7 @@ const App: React.FC = () => {
           <div className="container header-content">
             <Link to="/" className="logo">
               <span className="logo-dot" />
-              Mon E-learning
+              Maxi-learning
             </Link>
 
             <div className="header-right">

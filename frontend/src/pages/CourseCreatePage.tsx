@@ -28,7 +28,9 @@ const CourseCreatePage: React.FC = () => {
   const [error, setError] = useState<string>("");
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -51,8 +53,6 @@ const CourseCreatePage: React.FC = () => {
       }
 
       const created: CourseResponse = await res.json();
-
-      // Redirige vers la page détail du cours
       navigate(`/courses/${created.id}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Erreur inconnue";
@@ -63,64 +63,82 @@ const CourseCreatePage: React.FC = () => {
   };
 
   return (
-    <div>
-      <h2>Créer un cours</h2>
-
-      {error && <p className="error">Erreur : {error}</p>}
-
-      <form onSubmit={handleSubmit} className="form">
-        <div className="form-group">
-          <label htmlFor="title">Titre</label>
-          <input
-            id="title"
-            name="title"
-            value={form.title}
-            onChange={handleChange}
-            required
-          />
+    <section className="course-create">
+      <div className="course-create-card">
+        <div className="course-create-header">
+          <h2>Créer un cours</h2>
+          <p>
+            Renseigne les informations principales du cours. Tu pourras ajouter
+            les chapitres et le quiz ensuite.
+          </p>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="description">Description</label>
-          <textarea
-            id="description"
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            rows={4}
-          />
-        </div>
+        {error && <p className="course-form-error">Erreur : {error}</p>}
 
-        <div className="form-group">
-          <label htmlFor="category">Catégorie</label>
-          <input
-            id="category"
-            name="category"
-            value={form.category}
-            onChange={handleChange}
-            placeholder="Cloud, DevOps, etc."
-          />
-        </div>
+        <form onSubmit={handleSubmit} className="course-form">
+          <div className="course-form-group">
+            <label htmlFor="title">Titre du cours</label>
+            <input
+              id="title"
+              name="title"
+              value={form.title}
+              onChange={handleChange}
+              required
+              placeholder="Ex : Introduction au Cloud Computing"
+            />
+          </div>
 
-        <div className="form-group">
-          <label htmlFor="level">Niveau</label>
-          <select
-            id="level"
-            name="level"
-            value={form.level}
-            onChange={handleChange}
-          >
-            <option value="beginner">Débutant</option>
-            <option value="intermediate">Intermédiaire</option>
-            <option value="advanced">Avancé</option>
-          </select>
-        </div>
+          <div className="course-form-group">
+            <label htmlFor="description">Description</label>
+            <textarea
+              id="description"
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              rows={4}
+              placeholder="Explique en quelques lignes ce que l’on va apprendre…"
+            />
+          </div>
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Création..." : "Créer le cours"}
-        </button>
-      </form>
-    </div>
+          <div className="course-form-row">
+            <div className="course-form-group">
+              <label htmlFor="category">Catégorie</label>
+              <input
+                id="category"
+                name="category"
+                value={form.category}
+                onChange={handleChange}
+                placeholder="Cloud, DevOps, IA…"
+              />
+            </div>
+
+            <div className="course-form-group">
+              <label htmlFor="level">Niveau</label>
+              <select
+                id="level"
+                name="level"
+                value={form.level}
+                onChange={handleChange}
+              >
+                <option value="beginner">Débutant</option>
+                <option value="intermediate">Intermédiaire</option>
+                <option value="advanced">Avancé</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="course-form-actions">
+            <button
+              type="submit"
+              className="course-btn-primary"
+              disabled={loading}
+            >
+              {loading ? "Création en cours..." : "Créer le cours"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
   );
 };
 
