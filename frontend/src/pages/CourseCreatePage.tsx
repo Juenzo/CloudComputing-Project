@@ -36,11 +36,11 @@ const CourseCreatePage: React.FC = () => {
     setLoading(true);
 
     try {
+      // 🔴 Pour l’instant on n’envoie que les infos texte.
+      // Le PDF pourra être géré plus tard via FormData ou un endpoint dédié.
       const res = await fetch("/api/courses", {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json" 
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
 
@@ -49,8 +49,8 @@ const CourseCreatePage: React.FC = () => {
         throw new Error(errData.detail || `Erreur HTTP ${res.status}`);
       }
 
-      const created = await res.json();
-      
+      const created: CourseResponse = await res.json();
+
       navigate(`/courses/${created.id}`);
       
     } catch (err) {
@@ -67,8 +67,8 @@ const CourseCreatePage: React.FC = () => {
         <div className="course-create-header">
           <h2>Créer un cours</h2>
           <p>
-            Commence par créer la structure du cours. Tu pourras ajouter
-            les leçons (avec PDF/Vidéo) à l'étape suivante.
+            Renseigne les informations principales du cours. Tu pourras ajouter
+            les chapitres et le quiz ensuite.
           </p>
         </div>
 
@@ -125,6 +125,7 @@ const CourseCreatePage: React.FC = () => {
               </select>
             </div>
           </div>
+
 
           <div className="course-form-actions">
             <button

@@ -45,43 +45,54 @@ Maxi'Learning est une plateforme d’e-learning collaborative pensée pour être
 - Frontend (React) : interface utilisateur
 
 
-### Initalisation 
+## Initalisation 
 
-#### Lancer l'infrastructure sur Azure
+### Lancer l'infrastructure sur Azure
+1. Exécuter les commandes suivantes dans votre terminal
 ```bash
 cd infra
-az login
 terraform taint random_string.pg_suffix
 terraform init
 terraform plan
 terraform apply
 ```
-Ajouter son IP pour pouvoir accéder à la base de données
+
+2. Copier les variables de output du terraform apply dans le .env
+
+3. Exécuter le script suivant pour ajouter votre IP au firewall, et ainsi pouvoir accéder à la base de données (ne pas utiliser le réseau ISEN)
 ```bash
-# 1. Récupérer les noms depuis Terraform (pour ne pas les taper à la main)
->> Push-Location infra
->> $RgName  = (terraform output -raw resource_group_name).Trim()
->> $SqlFQDN = (terraform output -raw sql_server_fqdn).Trim()
->> $SqlServerName = $SqlFQDN.Split('.')[0]
->> Pop-Location
->>
->> # 2. Détecter votre IP publique actuelle
->> Write-Host "Détection de votre IP publique..." -ForegroundColor Yellow
->> $MyIp = (Invoke-WebRequest -Uri "https://api.ipify.org").Content
->> Write-Host "Votre IP est : $MyIp" -ForegroundColor Cyan
->>
->> # 3. Créer la règle pare-feu
->> Write-Host "Ajout de la règle pare-feu sur Azure..." -ForegroundColor Yellow
->> az sql server firewall-rule create `
->>     --resource-group $RgName `
->>     --server $SqlServerName `
->>     --name "DevLocalIP" `
->>     --start-ip-address $MyIp `
->>     --end-ip-address $MyIp
->>
->> Write-Host "C'est fait ! Vous pouvez lancer le backend en local." -ForegroundColor Green
+./add_ip_to_azure.ps1
 ```
-Lancer le backend en local 
+
+4. Connectez-vous à Azure Portal pour récupérer une clé d'accès au blob de stockage précedemment crée, puis ajouter la au fichier .env
+
+5. Installer les requirements Python
+``` bash
+pip install -r requirements.txt
+```
+
+6. Lancer le backend en local depuis un terminal dans la racine du projet
 ```bash
 uvicorn backend.main:app --reload
 ```
+
+7. Les routes de l'API backend sont accessible depuis l'url : http://127.0.0.1:8000/docs#/
+
+### Exemple de .env
+Your credentials for the SQL Database :
+- DB_USER=sqladmin
+- DB_PASSWORD=Admin123!
+
+Key for the Storage Account, recuperated from the Azure Portal :
+- STORAGE_ACCOUNT_KEY=ici
+
+Copy and past the output of terraform apply command here :
+- api_hostname = "api-elearning-5510.azurewebsites.net"
+- api_name = "api-elearning-5510"
+- api_url = "https://api-elearning-5510.azurewebsites.net"        
+- content_container_name = "content"
+- evaluation_pdf_url = "https://storagelearning5510.blob.core.windows.net/content/pdf/evaluation.pdf"
+- resource_group_name = "rg-elearning"
+- sql_database_name = "elearning_bdd"
+- sql_server_fqdn = "sql-srv-rg-elearning-5510.database.windows.net"
+- storage_account_name = "storagelearning5510"
