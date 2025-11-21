@@ -1,0 +1,262 @@
+.course-detail-wrapper {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 32px 32px 40px;
+  border-radius: 26px;
+  background: radial-gradient(circle at top left, #e0f2fe 0, #ffffff 60%);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+}
+
+.course-detail-topbar {
+  margin-bottom: 12px;
+}
+
+.course-detail-back {
+  font-size: 0.85rem;
+  color: #64748b;
+  text-decoration: none;
+}
+
+.course-detail-back:hover {
+  text-decoration: underline;
+}
+
+.course-detail-card {
+  background: #ffffff;
+  border-radius: 22px;
+  padding: 22px 24px 24px;
+  box-shadow: 0 12px 30px rgba(148, 163, 184, 0.35);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+/* HEADER */
+
+.course-detail-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+}
+
+.course-detail-title-block h1 {
+  margin: 0 0 6px;
+  font-size: 1.7rem;
+}
+
+.course-detail-subtitle {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.course-detail-tags {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.course-tag {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.course-tag-level {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.course-tag-category {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* BODY */
+
+.course-detail-body {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1.3fr);
+  gap: 20px;
+}
+
+.course-detail-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.course-detail-aside h2 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1rem;
+}
+
+.course-detail-section h2 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.course-detail-description {
+  margin: 0;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.course-detail-info {
+  margin: 4px 0;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+/* CHAPITRES */
+
+.course-chapter-list {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.course-chapter-item {
+  margin-bottom: 10px;
+}
+
+.course-chapter-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.course-chapter-order {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+}
+
+.course-chapter-header h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.course-chapter-content {
+  margin: 2px 0 0;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+/* QUIZ */
+
+.course-detail-quiz-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+/* Bouton secondaire outline pour rester cohérent */
+.course-btn-outline {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid #cbd5f5;
+  background: #f8fafc;
+  color: #1e40af;
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Tu as déjà .course-btn-primary qui vient de ta page de création,
+   on le réutilise ici. */
+
+/* PDF */
+
+.course-detail-aside {
+  display: flex;
+  flex-direction: column;
+}
+
+.course-pdf-frame-wrapper {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  max-height: 380px;
+}
+
+.course-pdf-frame {
+  width: 100%;
+  height: 360px;
+  border: none;
+}
+
+.course-pdf-open-btn {
+  margin-top: 10px;
+  display: inline-flex;
+}
+
+/* Responsive */
+
+@media (max-width: 900px) {
+  .course-detail-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .course-detail-tags {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .course-detail-wrapper {
+    margin: 24px 12px 32px;
+    padding: 22px 18px;
+  }
+
+  .course-detail-card {
+    padding: 18px 16px 20px;
+  }
+
+  .course-detail-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .course-detail-tags {
+    flex-direction: row;
+  }
+}
+
+.course-detail-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.course-detail-section-header h2 {
+  margin: 0;
+}
+
+.course-detail-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.course-detail-title-row h1 {
+  margin: 0;
+}
+
+.course-detail-add-lesson {
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
