@@ -1,17 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-type CourseLevel = "beginner" | "intermediate" | "advanced";
-
 interface CreateCoursePayload {
   title: string;
   description: string;
   category: string;
-  level: CourseLevel;
-}
-
-interface CourseResponse extends CreateCoursePayload {
-  id: string;
+  level: string;
 }
 
 const CourseCreatePage: React.FC = () => {
@@ -24,7 +18,6 @@ const CourseCreatePage: React.FC = () => {
     level: "beginner",
   });
 
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
 
@@ -37,34 +30,29 @@ const CourseCreatePage: React.FC = () => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handlePdfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setPdfFile(file);
-    // pour debug : console.log(file);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      // 🔴 Pour l’instant on n’envoie que les infos texte.
-      // Le PDF pourra être géré plus tard via FormData ou un endpoint dédié.
       const res = await fetch("/api/courses", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json" 
+        },
         body: JSON.stringify(form),
       });
 
       if (!res.ok) {
-        throw new Error(`Erreur HTTP ${res.status}`);
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || `Erreur HTTP ${res.status}`);
       }
 
-      const created: CourseResponse = await res.json();
-      // TODO backend: associer pdfFile au cours created.id si besoin
-
+      const created = await res.json();
+      
       navigate(`/courses/${created.id}`);
+      
     } catch (err) {
       const message = err instanceof Error ? err.message : "Erreur inconnue";
       setError(message);
@@ -79,12 +67,12 @@ const CourseCreatePage: React.FC = () => {
         <div className="course-create-header">
           <h2>Créer un cours</h2>
           <p>
-            Renseigne les informations principales du cours. Tu pourras ajouter
-            les chapitres et le quiz ensuite.
+            Commence par créer la structure du cours. Tu pourras ajouter
+            les leçons (avec PDF/Vidéo) à l'étape suivante.
           </p>
         </div>
 
-        {error && <p className="course-form-error">Erreur : {error}</p>}
+        {error && <p className="course-form-error">{error}</p>}
 
         <form onSubmit={handleSubmit} className="course-form">
           <div className="course-form-group">
@@ -107,7 +95,7 @@ const CourseCreatePage: React.FC = () => {
               value={form.description}
               onChange={handleChange}
               rows={4}
-              placeholder="Explique en quelques lignes ce que l’on va apprendre…"
+              placeholder="De quoi parle ce cours ?"
             />
           </div>
 
@@ -119,7 +107,7 @@ const CourseCreatePage: React.FC = () => {
                 name="category"
                 value={form.category}
                 onChange={handleChange}
-                placeholder="Cloud, DevOps, IA…"
+                placeholder="Cloud, DevOps, IA..."
               />
             </div>
 
@@ -138,33 +126,13 @@ const CourseCreatePage: React.FC = () => {
             </div>
           </div>
 
-<div className="course-form-group">
-  <label>Ressource PDF (optionnel)</label>
-
-  <label htmlFor="pdf" className="file-input-wrapper">
-    <span className="file-input-button">Choisir un PDF</span>
-    <span className="file-input-name">
-      {pdfFile ? pdfFile.name : "Aucun fichier sélectionné"}
-    </span>
-  </label>
-
-  <input
-    id="pdf"
-    type="file"
-    accept="application/pdf"
-    onChange={handlePdfChange}
-    className="file-input-hidden"
-  />
-</div>
-
-
           <div className="course-form-actions">
             <button
               type="submit"
               className="course-btn-primary"
               disabled={loading}
             >
-              {loading ? "Création en cours..." : "Créer le cours"}
+              {loading ? "Création..." : "Créer le cours"}
             </button>
           </div>
         </form>

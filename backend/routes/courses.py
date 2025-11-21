@@ -1,15 +1,16 @@
 import re
+import uuid
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from sqlmodel import Session, select
 
-# Import des nouveaux modèles
+# Import des modèles
 from ..models import (
     Course, CourseCreate, CourseRead, 
     Lesson, LessonCreate, LessonRead
 )
 from ..database import get_session
-from ..services.blob_service import generate_sas_url, delete_file_from_blob
+from ..services.blob_service import generate_sas_url, delete_file_from_blob, upload_file_to_blob
 
 router = APIRouter()
 
@@ -32,7 +33,7 @@ def list_courses(session: Session = Depends(get_session)):
 
 @router.post("/courses", response_model=CourseRead)
 def create_course(course: CourseCreate, session: Session = Depends(get_session)):
-    """Crée un nouveau cours avec génération auto du slug"""
+    """Crée un nouveau cours (juste les infos, pas de fichier ici)"""
     # Génération du slug si non fourni
     if not course.slug:
         course.slug = create_slug(course.title)
@@ -62,9 +63,15 @@ def get_course(slug_or_id: str, session: Session = Depends(get_session)):
 
 @router.delete("/courses/{course_id}")
 def delete_course(course_id: int, session: Session = Depends(get_session)):
+    """Supprime un cours et ses leçons (Nettoyage des blobs géré en cascade si besoin)"""
     course = session.get(Course, course_id)
     if not course:
         raise HTTPException(status_code=404, detail="Cours introuvable")
+    
+    for lesson in course.lessons:
+        if lesson.content_url:
+            delete_file_from_blob(lesson.content_url)
+
     session.delete(course)
     session.commit()
     return {"message": "Cours supprimé"}
@@ -86,13 +93,51 @@ def list_lessons_for_course(course_id: int, session: Session = Depends(get_sessi
     return lessons
 
 @router.post("/lessons", response_model=LessonRead)
-def create_lesson(lesson: LessonCreate, session: Session = Depends(get_session)):
-    """Ajoute une leçon à un cours"""
-    # Vérif cours existe
-    if not session.get(Course, lesson.course_id):
+def create_lesson(
+    course_id: int = Form(...),
+    title: str = Form(...),
+    description: str = Form(None),
+    file: UploadFile = File(None),
+    session: Session = Depends(get_session)
+):
+    """
+    Ajoute une leçon à un cours.
+    Gère l'upload du fichier PDF/Vidéo vers Azure Blob Storage.
+    """
+    if not session.get(Course, course_id):
         raise HTTPException(status_code=404, detail="Cours lié introuvable")
         
-    db_lesson = Lesson.model_validate(lesson)
+    content_url = None
+    content_type = "text" 
+
+    if file:
+        try:
+            ext = file.filename.split(".")[-1] if "." in file.filename else "bin"
+            unique_filename = f"{uuid.uuid4()}.{ext}"
+            
+            # Upload vers Azure
+            upload_file_to_blob(file.file, unique_filename)
+
+            content_url = unique_filename
+            
+            if ext.lower() == "pdf":
+                content_type = "pdf"
+            elif ext.lower() in ["mp4", "mov", "avi"]:
+                content_type = "video"
+            else:
+                content_type = "file"
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Erreur upload Azure : {str(e)}")
+
+    db_lesson = Lesson(
+        title=title,
+        description=description,
+        course_id=course_id,
+        content_type=content_type,
+        content_url=content_url,
+    )
+
     session.add(db_lesson)
     session.commit()
     session.refresh(db_lesson)
@@ -133,7 +178,6 @@ def update_lesson(lesson_id: int, lesson_update: LessonCreate, session: Session 
     session.refresh(db_lesson)
     return db_lesson
 
-
 @router.delete("/lessons/{lesson_id}")
 def delete_lesson(lesson_id: int, session: Session = Depends(get_session)):
     """Supprime une leçon ET son fichier associé sur Azure (Nettoyage complet)"""
@@ -151,18 +195,3 @@ def delete_lesson(lesson_id: int, session: Session = Depends(get_session)):
     session.commit()
     
     return {"message": "Leçon et fichier associé supprimés"}
-
-@router.delete("/courses/{course_id}")
-def delete_course(course_id: int, session: Session = Depends(get_session)):
-    """Supprime un cours et TOUTES ses leçons (Attention : nettoyage des blobs nécessaire)"""
-    course = session.get(Course, course_id)
-    if not course:
-        raise HTTPException(status_code=404, detail="Cours introuvable")
-    
-    for lesson in course.lessons:
-        if lesson.content_url:
-            delete_file_from_blob(lesson.content_url)
-            
-    session.delete(course)
-    session.commit()
-    return {"message": "Cours et tout son contenu supprimés"}
