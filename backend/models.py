@@ -21,25 +21,27 @@ class ContentType(str, Enum):
 
 # --- COURSE ---
 class CourseBase(SQLModel):
-    title: str = Field(index=True, max_length=255) 
-    slug: str = Field(unique=True, index=True, max_length=255) 
+    title: str = Field(index=True, max_length=255)
     description: Optional[str] = None
     category: CategoryName = CategoryName.programming
     level: Optional[str] = "Beginner"
     image_url: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class Course(CourseBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    
+    slug: str = Field(unique=True, index=True, max_length=255)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
     lessons: List["Lesson"] = Relationship(back_populates="course", cascade_delete=True)
     quizzes: List["Quiz"] = Relationship(back_populates="course", cascade_delete=True)
 
 class CourseCreate(CourseBase):
-    pass
+    slug: Optional[str] = Field(default=None, unique=True, index=True, max_length=255)
 
 class CourseRead(CourseBase):
     id: int
+    slug: str
+    created_at: datetime
 
 
 # --- LESSON ---
