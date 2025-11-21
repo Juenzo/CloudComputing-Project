@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-interface CreateCoursePayload {
+interface CreateCourseForm {
   title: string;
   description: string;
   category: string;
@@ -11,11 +11,11 @@ interface CreateCoursePayload {
 const CourseCreatePage: React.FC = () => {
   const navigate = useNavigate();
 
-  const [form, setForm] = useState<CreateCoursePayload>({
+  const [form, setForm] = useState<CreateCourseForm>({
     title: "",
     description: "",
-    category: "",
-    level: "beginner",
+    category: "Programming", // doit matcher l'Enum côté backend
+    level: "Beginner",       // idem
   });
 
   const [loading, setLoading] = useState(false);
@@ -36,23 +36,51 @@ const CourseCreatePage: React.FC = () => {
     setLoading(true);
 
     try {
-      // 🔴 Pour l’instant on n’envoie que les infos texte.
-      // Le PDF pourra être géré plus tard via FormData ou un endpoint dédié.
+      // Génération du slug à partir du titre
+      const slug = form.title
+        .toLowerCase()
+        .trim()
+
+      const payload = {
+        ...form,
+        slug,
+        // image_url: null, // à remplir plus tard si tu gères une image
+      };
+
       const res = await fetch("/api/courses", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.detail || `Erreur HTTP ${res.status}`);
+        let message = `Erreur HTTP ${res.status}`;
+        try {
+          const errData = await res.json();
+          if (errData.detail) {
+            if (Array.isArray(errData.detail)) {
+              // Erreurs de validation FastAPI
+              message = errData.detail
+                .map((d: any) => d.msg || JSON.stringify(d))
+                .join(" | ");
+            } else if (typeof errData.detail === "string") {
+              message = errData.detail;
+            } else {
+              message = JSON.stringify(errData.detail);
+            }
+          }
+        } catch {
+          // on garde le message par défaut
+        }
+        throw new Error(message);
       }
 
-      const created: CourseResponse = await res.json();
+      const created = await res.json();
 
+      // Redirection vers la page de détail du cours
       navigate(`/courses/${created.id}`);
-      
     } catch (err) {
       const message = err instanceof Error ? err.message : "Erreur inconnue";
       setError(message);
@@ -67,8 +95,8 @@ const CourseCreatePage: React.FC = () => {
         <div className="course-create-header">
           <h2>Créer un cours</h2>
           <p>
-            Renseigne les informations principales du cours. Tu pourras ajouter
-            les chapitres et le quiz ensuite.
+            Commence par créer la structure du cours. Tu pourras ajouter
+            les leçons (avec PDF/Vidéo) à l&apos;étape suivante.
           </p>
         </div>
 
@@ -102,13 +130,19 @@ const CourseCreatePage: React.FC = () => {
           <div className="course-form-row">
             <div className="course-form-group">
               <label htmlFor="category">Catégorie</label>
-              <input
+              <select
                 id="category"
                 name="category"
                 value={form.category}
                 onChange={handleChange}
-                placeholder="Cloud, DevOps, IA..."
-              />
+              >
+                <option value="Programming">Programmation</option>
+                <option value="Cloud">Cloud</option>
+                <option value="Data Science">Data Science</option>
+                <option value="Design">Design</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Business">Business</option>
+              </select>
             </div>
 
             <div className="course-form-group">
@@ -119,13 +153,12 @@ const CourseCreatePage: React.FC = () => {
                 value={form.level}
                 onChange={handleChange}
               >
-                <option value="beginner">Débutant</option>
-                <option value="intermediate">Intermédiaire</option>
-                <option value="advanced">Avancé</option>
+                <option value="Beginner">Débutant</option>
+                <option value="Intermediate">Intermédiaire</option>
+                <option value="Advanced">Avancé</option>
               </select>
             </div>
           </div>
-
 
           <div className="course-form-actions">
             <button
