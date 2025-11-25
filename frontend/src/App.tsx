@@ -7,6 +7,8 @@ import CourseCreatePage from "./pages/CourseCreatePage";
 import CourseDetailPage from "./pages/CourseDetailPage";
 import QuizCreatePage from "./pages/QuizCreatePage";
 import QuizPlayPage from "./pages/QuizPlayPage";
+import LessonCreatePage from "./pages/LessonCreatePage";
+import LessonDetailPage from "./pages/LessonDetailPage";
 
 type Theme = "light" | "dark";
 
@@ -89,6 +91,8 @@ const App: React.FC = () => {
                 element={<QuizCreatePage />}
               />
               <Route path="/courses/:courseId/quiz" element={<QuizPlayPage />} />
+                <Route path="/courses/:courseId/lessons/new" element={<LessonCreatePage />} />
+  <Route path="/lessons/:lessonId" element={<LessonDetailPage />} />
             </Routes>
           </div>
         </main>
@@ -98,12 +102,13 @@ const App: React.FC = () => {
             <span>© {new Date().getFullYear()} – Démo e-learning</span>
 
             <a
-              href="https://github.com/Juenzo/CloudComputing-Project"
-              target="_blank"
-              rel="noreferrer"
-              className="github-link"
-              aria-label="Voir le code sur GitHub"
-            >
+                href="https://github.com/Juenzo/CloudComputing-Project"
+                target="_blank"
+                rel="noreferrer noopener"
+                className="github-link"
+                aria-label="Voir le code sur GitHub"
+              >
+
               <svg
                 viewBox="0 0 24 24"
                 aria-hidden="true"

@@ -8,3 +8,5 @@ infra/terraform.tfstate.backup
 infra/.terraform.lock.hcl
 
 backend/__pycache__/
+frontend/node_modules/
+/node_modules/
