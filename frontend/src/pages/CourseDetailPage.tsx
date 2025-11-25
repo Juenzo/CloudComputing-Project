@@ -2,13 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import "./css/CourseDetailPage.css";
 
-interface Chapter {
-  id: number | string;
-  courseId?: number | string;
-  title: string;
-  content?: string;
-  order?: number;
-}
+type ContentType = "video" | "pdf" | "word" | "text" | "link";
 
 interface CourseDetail {
   id: number;
@@ -16,37 +10,60 @@ interface CourseDetail {
   description?: string;
   category?: string;
   level?: string;
-  pdfUrl?: string;
-  chapters?: Chapter[];
+}
+
+interface LessonSummary {
+  id: number;
+  title: string;
+  description?: string | null;
+  content_type: ContentType;
+  order?: number | null;
+  course_id: number;
 }
 
 const CourseDetailPage: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
+
   const [course, setCourse] = useState<CourseDetail | null>(null);
+  const [lessons, setLessons] = useState<LessonSummary[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
     if (!courseId) return;
 
-    setLoading(true);
-    setError("");
+    const fetchData = async () => {
+      setLoading(true);
+      setError("");
 
-    fetch(`/api/courses/${courseId}`)
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("Erreur HTTP " + res.status);
+      try {
+        // On récupère le cours + ses leçons en parallèle
+        const [courseRes, lessonsRes] = await Promise.all([
+          fetch(`/api/courses/${courseId}`),
+          fetch(`/api/courses/${courseId}/lessons`),
+        ]);
+
+        if (!courseRes.ok) {
+          throw new Error("Erreur HTTP cours " + courseRes.status);
         }
-        return res.json();
-      })
-      .then((data: CourseDetail) => {
-        setCourse(data);
-      })
-      .catch((err: unknown) => {
+        if (!lessonsRes.ok) {
+          throw new Error("Erreur HTTP leçons " + lessonsRes.status);
+        }
+
+        const courseData: CourseDetail = await courseRes.json();
+        const lessonsData: LessonSummary[] = await lessonsRes.json();
+
+        setCourse(courseData);
+        setLessons(lessonsData);
+      } catch (err) {
         const message = err instanceof Error ? err.message : "Erreur inconnue";
         setError(message);
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, [courseId]);
 
   if (loading) {
@@ -75,7 +92,9 @@ const CourseDetailPage: React.FC = () => {
     );
   }
 
-  const chapters = course.chapters ?? [];
+  const sortedLessons = lessons
+    .slice()
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   return (
     <section className="course-detail-wrapper">
@@ -136,37 +155,47 @@ const CourseDetailPage: React.FC = () => {
             )}
 
             <section className="course-detail-section">
-              <h2>Chapitres</h2>
+              <h2>Leçons</h2>
 
-              {chapters.length === 0 && (
+              {sortedLessons.length === 0 && (
                 <p className="course-detail-info">
-                  Aucun chapitre défini (le cours est peut-être principalement
-                  basé sur un PDF ou des ressources externes).
+                  Aucune leçon définie pour l’instant. Ajoute une première
+                  leçon pour ce cours.
                 </p>
               )}
 
-              {chapters.length > 0 && (
+              {sortedLessons.length > 0 && (
                 <ol className="course-chapter-list">
-                  {chapters
-                    .slice()
-                    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-                    .map((chapter) => (
-                      <li key={chapter.id} className="course-chapter-item">
-                        <div className="course-chapter-header">
-                          <span className="course-chapter-order">
-                            Chapitre {chapter.order ?? "?"}
-                          </span>
-                          <h3>{chapter.title}</h3>
-                        </div>
-                        {chapter.content && (
-                          <p className="course-chapter-content">
-                            {chapter.content.length > 180
-                              ? chapter.content.slice(0, 180) + "..."
-                              : chapter.content}
-                          </p>
-                        )}
-                      </li>
-                    ))}
+                  {sortedLessons.map((lesson, index) => (
+                    <li key={lesson.id} className="course-chapter-item">
+                      <div className="course-chapter-header">
+                        <span className="course-chapter-order">
+                          Leçon {lesson.order ?? index + 1}
+                        </span>
+                        <h3>{lesson.title}</h3>
+                        <span className="course-tag course-tag-content-type">
+                          {lesson.content_type}
+                        </span>
+                      </div>
+
+                      {lesson.description && (
+                        <p className="course-chapter-content">
+                          {lesson.description.length > 180
+                            ? lesson.description.slice(0, 180) + "..."
+                            : lesson.description}
+                        </p>
+                      )}
+
+                      <div className="course-chapter-actions">
+                        <Link
+                          to={`/lessons/${lesson.id}`}
+                          className="course-btn-outline"
+                        >
+                          Ouvrir la leçon
+                        </Link>
+                      </div>
+                    </li>
+                  ))}
                 </ol>
               )}
             </section>
@@ -193,27 +222,7 @@ const CourseDetailPage: React.FC = () => {
             </section>
           </div>
 
-          {/* Colonne PDF / ressources */}
-          {course.pdfUrl && (
-            <aside className="course-detail-aside">
-              <h2>Contenu PDF</h2>
-              <div className="course-pdf-frame-wrapper">
-                <iframe
-                  src={course.pdfUrl}
-                  title={`PDF du cours ${course.title}`}
-                  className="course-pdf-frame"
-                />
-              </div>
-              <a
-                href={course.pdfUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="course-btn-primary course-pdf-open-btn"
-              >
-                Ouvrir le PDF dans un nouvel onglet
-              </a>
-            </aside>
-          )}
+          {/* Plus de colonne PDF ici : les contenus sont gérés au niveau des leçons */}
         </div>
       </div>
     </section>
