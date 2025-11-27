@@ -260,3 +260,207 @@
   white-space: nowrap;
 }
 
+/* =========================================
+   Mise en forme de la page détail / leçon
+   (pas de background ici, c'est géré dans index.css)
+   ========================================= */
+
+.course-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.course-detail-title-block {
+  flex: 1;
+}
+
+.course-detail-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.course-detail-title-row h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.course-detail-subtitle {
+  margin: 0.4rem 0 0;
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
+/* Tags cours (niveau / catégorie / type de contenu) */
+
+.course-detail-tags {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+}
+
+.course-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.course-tag-level {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+
+.course-tag-category {
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
+.course-tag-content-type {
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  text-transform: uppercase;
+}
+
+/* Corps de page */
+
+.course-detail-body {
+  margin-top: 1.5rem;
+}
+
+.course-detail-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.course-detail-section h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+}
+
+.course-detail-description {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+/* Liste des leçons */
+
+.course-chapter-list {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.course-chapter-item + .course-chapter-item {
+  margin-top: 0.9rem;
+}
+
+.course-chapter-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.course-chapter-header h3 {
+  margin: 0;
+  font-size: 0.98rem;
+}
+
+.course-chapter-order {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
+}
+
+.course-chapter-content {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.course-chapter-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Infos / textes secondaires */
+
+.course-detail-info {
+  font-size: 0.9rem;
+  color: #9ca3af;
+}
+
+/* Bouton outline (Ajouter une leçon, Ouvrir la leçon, Configurer le quiz) */
+
+.course-btn-outline {
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.8);
+  padding: 0.4rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: transform 0.12s ease, box-shadow 0.12s ease,
+    border-color 0.12s ease, background 0.12s ease;
+}
+
+.course-btn-outline:hover {
+  border-color: rgba(59, 130, 246, 0.9);
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
+  background: rgba(15, 23, 42, 0.1);
+}
+
+/* Boutons quiz */
+
+.course-detail-quiz-actions {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* Topbar "Retour au catalogue" */
+
+.course-detail-topbar {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.course-detail-back {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.course-detail-back:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+/* Responsive */
+
+@media (max-width: 640px) {
+  .course-detail-header {
+    flex-direction: column;
+  }
+
+  .course-detail-tags {
+    align-items: flex-start;
+  }
+}

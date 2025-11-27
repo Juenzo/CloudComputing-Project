@@ -66,31 +66,37 @@ const CourseDetailPage: React.FC = () => {
     fetchData();
   }, [courseId]);
 
-  if (loading) {
-    return (
-      <section className="course-detail-wrapper">
+if (loading) {
+  return (
+    <section className="course-detail-wrapper">
+      <div className="course-detail-card">
         <p className="course-detail-info">Chargement du cours...</p>
-      </section>
-    );
-  }
+      </div>
+    </section>
+  );
+}
 
-  if (error) {
-    return (
-      <section className="course-detail-wrapper">
+if (error) {
+  return (
+    <section className="course-detail-wrapper">
+      <div className="course-detail-card">
         <p className="course-form-error">
           Impossible de charger le cours : {error}
         </p>
-      </section>
-    );
-  }
+      </div>
+    </section>
+  );
+}
 
-  if (!course) {
-    return (
-      <section className="course-detail-wrapper">
+if (!course) {
+  return (
+    <section className="course-detail-wrapper">
+      <div className="course-detail-card">
         <p className="course-detail-info">Cours introuvable.</p>
-      </section>
-    );
-  }
+      </div>
+    </section>
+  );
+}
 
   const sortedLessons = lessons
     .slice()
