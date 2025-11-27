@@ -28,7 +28,7 @@ class FullQuizCreate(QuizCreate):
 
 # --- ROUTES QUIZ ---
 
-@router.post("/courses/{course_id}/quizzes", response_model=QuizRead)
+@router.post("/courses/{course_id}/quiz", response_model=QuizRead)
 def create_full_quiz(course_id: int, quiz_data: FullQuizCreate, session: Session = Depends(get_session)):
     """
     Crée un Quiz complet d'un coup (Quiz + Questions + Choix).
@@ -58,12 +58,12 @@ def create_full_quiz(course_id: int, quiz_data: FullQuizCreate, session: Session
     session.commit()
     return db_quiz
 
-@router.get("/courses/{course_id}/quizzes", response_model=List[QuizRead])
-def list_quizzes_for_course(course_id: int, session: Session = Depends(get_session)):
-    quizzes = session.exec(select(Quiz).where(Quiz.course_id == course_id).order_by(Quiz.order)).all()
-    return quizzes
+@router.get("/courses/{course_id}/quiz", response_model=List[QuizRead])
+def list_quiz_for_course(course_id: int, session: Session = Depends(get_session)):
+    quiz = session.exec(select(Quiz).where(Quiz.course_id == course_id).order_by(Quiz.order)).all()
+    return quiz
 
-@router.get("/quizzes/{quiz_id}")
+@router.get("/quiz/{quiz_id}")
 def get_quiz_details_for_student(quiz_id: int, session: Session = Depends(get_session)):
     """
     Récupère le quiz avec ses questions et choix, MAIS cache 'is_correct'.
@@ -109,7 +109,7 @@ class UserAnswer(BaseModel):
     question_id: int
     choice_id: int
 
-@router.post("/quizzes/{quiz_id}/submit")
+@router.post("/quiz/{quiz_id}/submit")
 def submit_quiz(quiz_id: int, answers: List[UserAnswer], session: Session = Depends(get_session)):
     """Vérifie les réponses et calcule le score final"""
     quiz = session.get(Quiz, quiz_id)
@@ -158,7 +158,7 @@ def submit_quiz(quiz_id: int, answers: List[UserAnswer], session: Session = Depe
     }
 
 
-@router.delete("/quizzes/{quiz_id}")
+@router.delete("/quiz/{quiz_id}")
 def delete_quiz(quiz_id: int, session: Session = Depends(get_session)):
     """Supprime un quiz (les questions et réponses seront supprimées en cascade par la BDD)"""
     quiz = session.get(Quiz, quiz_id)
