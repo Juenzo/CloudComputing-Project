@@ -1,17 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-// Types locaux pour éviter les erreurs de compilation
-type CourseLevel = "Beginner" | "Intermediate" | "Advanced";
-
-interface CreateCoursePayload {
-  title: string;
-  description: string;
-  category: string;
-  level: CourseLevel;
-  slug: string;
-}
-
 interface CreateCourseForm {
   title: string;
   description: string;
@@ -21,6 +10,7 @@ interface CreateCourseForm {
 
 interface CourseResponse extends CreateCoursePayload {
   id: string;
+  pdfUrl?: string;
 }
 
 const CourseCreatePage: React.FC = () => {
@@ -45,6 +35,10 @@ const CourseCreatePage: React.FC = () => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handlePdfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setPdfFile(file);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,29 +46,52 @@ const CourseCreatePage: React.FC = () => {
     setLoading(true);
 
     try {
+      if (!pdfFile) {
+        throw new Error("Merci de sélectionner un PDF pour le cours.");
+      }
 
-      // 👉 Construction du FormData
+      // 👉 Construction du FormData (PDF + champs texte)
       const formData = new FormData();
+      formData.append("pdf", pdfFile);
+
       formData.append("title", form.title);
       formData.append("description", form.description);
       formData.append("category", form.category);
       formData.append("level", form.level);
 
       // Génération du slug à partir du titre
-      const slug = form.title.toLowerCase().trim().replace(/\s+/g, "-");
-      formData.append("slug", slug);
+      const slug = form.title
+        .toLowerCase()
+        .trim()
+
+      const payload = {
+        ...form,
+        slug,
+        // image_url: null, // à remplir plus tard si tu gères une image
+      };
 
       const res = await fetch("/api/courses", {
         method: "POST",
         body: formData,
+        // ⚠️ NE PAS mettre Content-Type ici, le navigateur le gère (multipart/form-data + boundary)
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || `Erreur HTTP ${res.status}`);
+      }
+
+      const created: CourseResponse = await res.json();
         let message = `Erreur HTTP ${res.status}`;
         try {
           const errData = await res.json();
-          if (errData?.detail) {
+          if (errData.detail) {
             if (Array.isArray(errData.detail)) {
+              // Erreurs de validation FastAPI
               message = errData.detail
                 .map((d: any) => d.msg || JSON.stringify(d))
                 .join(" | ");
@@ -85,12 +102,12 @@ const CourseCreatePage: React.FC = () => {
             }
           }
         } catch {
-          // ignorer si la réponse erreur n'est pas JSON
+          // on garde le message par défaut
         }
         throw new Error(message);
       }
 
-      const created: CourseResponse = await res.json();
+      const created = await res.json();
 
       // Redirection vers la page de détail du cours
       navigate(`/courses/${created.id}`);
@@ -108,7 +125,7 @@ const CourseCreatePage: React.FC = () => {
         <div className="course-create-header">
           <h2>Créer un cours</h2>
           <p>
-            Renseigne quelques infos. Le quiz sera ajouté
+            Uploade un PDF et renseigne quelques infos. Le quiz sera ajouté
             ensuite.
             Commence par créer la structure du cours. Tu pourras ajouter
             les leçons (avec PDF/Vidéo) à l&apos;étape suivante.
@@ -173,6 +190,26 @@ const CourseCreatePage: React.FC = () => {
                 <option value="Advanced">Avancé</option>
               </select>
             </div>
+          </div>
+
+          {/* Champ PDF custom */}
+          <div className="course-form-group">
+            <label>Ressource PDF (obligatoire)</label>
+
+            <label htmlFor="pdf" className="file-input-wrapper">
+              <span className="file-input-button">Choisir un PDF</span>
+              <span className="file-input-name">
+                {pdfFile ? pdfFile.name : "Aucun fichier sélectionné"}
+              </span>
+            </label>
+
+            <input
+              id="pdf"
+              type="file"
+              accept="application/pdf"
+              onChange={handlePdfChange}
+              className="file-input-hidden"
+            />
           </div>
 
           <div className="course-form-actions">
