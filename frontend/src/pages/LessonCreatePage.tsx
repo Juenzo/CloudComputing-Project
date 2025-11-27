@@ -1,5 +1,7 @@
+// src/pages/LessonCreatePage.tsx
 import React, { useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
+import "./css/LessonCreatePage.css";
 
 type ContentType = "video" | "pdf" | "word" | "text" | "link";
 
@@ -7,8 +9,8 @@ interface LessonForm {
   title: string;
   description: string;
   content_type: ContentType;
-  content_url: string;   // Reste utilisé pour le type "link"
-  content_text: string;  // Pour contenu texte
+  content_url: string;   // pour type "link"
+  content_text: string;  // pour contenu texte
   order: number;
 }
 
@@ -25,24 +27,22 @@ const LessonCreatePage: React.FC = () => {
     order: 0,
   });
 
-  // NOUVEAU : État pour stocker le fichier sélectionné
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
 
-if (!courseId) {
-  return (
-    <section className="course-detail-wrapper">
-      <div className="course-detail-card">
-        <p className="course-form-error">
-          ID du cours manquant dans l’URL.
-        </p>
-      </div>
-    </section>
-  );
-}
-
+  // Si l'URL est cassée
+  if (!courseId) {
+    return (
+      <section className="lesson-create-wrapper">
+        <div className="lesson-create-card">
+          <p className="lesson-form-error">
+            ID du cours manquant dans l’URL.
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -56,7 +56,6 @@ if (!courseId) {
     }));
   };
 
-  // NOUVEAU : Gestion du changement de fichier
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setSelectedFile(e.target.files[0]);
@@ -76,27 +75,23 @@ if (!courseId) {
       fd.append("order", String(form.order ?? 0));
       fd.append("course_id", String(Number(courseId)));
 
-      // Logique modifiée :
       if (form.content_type === "text") {
         if (form.content_text) fd.append("content_text", form.content_text);
-      } 
-      // Si c'est un fichier (PDF, Vidéo, Word), on envoie le fichier
-      else if (["pdf", "video", "word"].includes(form.content_type)) {
+      } else if (["pdf", "video", "word"].includes(form.content_type)) {
         if (selectedFile) {
           fd.append("file", selectedFile);
         } else {
-           // On peut décider de bloquer si aucun fichier n'est mis, ou laisser passer
-           throw new Error("Veuillez sélectionner un fichier pour ce type de leçon.");
+          throw new Error(
+            "Veuillez sélectionner un fichier pour ce type de leçon."
+          );
         }
-      } 
-      // Si c'est un lien externe pur, on envoie l'URL textuelle
-      else if (form.content_type === "link") {
+      } else if (form.content_type === "link") {
         if (form.content_url) fd.append("content_url", form.content_url);
       }
 
       const res = await fetch("/api/lessons", {
         method: "POST",
-        body: fd, // Le navigateur gère automatiquement le Content-Type multipart/form-data
+        body: fd,
       });
 
       if (!res.ok) {
@@ -104,11 +99,14 @@ if (!courseId) {
         try {
           const errData = await res.json();
           if (errData.detail) {
-            message = typeof errData.detail === "string" 
-              ? errData.detail 
-              : JSON.stringify(errData.detail);
+            message =
+              typeof errData.detail === "string"
+                ? errData.detail
+                : JSON.stringify(errData.detail);
           }
-        } catch { }
+        } catch {
+          // on garde le message de base
+        }
         throw new Error(message);
       }
 
@@ -122,34 +120,35 @@ if (!courseId) {
   };
 
   const isTextContent = form.content_type === "text";
-  // On distingue maintenant le mode "Lien externe" du mode "Upload Fichier"
   const isLinkContent = form.content_type === "link";
   const isFileContent = ["pdf", "video", "word"].includes(form.content_type);
 
   return (
-    <section className="course-detail-wrapper">
-      <div className="course-detail-topbar">
-        <Link to={`/courses/${courseId}`} className="course-detail-back">
+    <section className="lesson-create-wrapper">
+      <div className="lesson-create-topbar">
+        <Link to={`/courses/${courseId}`} className="lesson-create-back">
           ← Retour au cours
         </Link>
       </div>
 
-      <div className="course-detail-card">
-        <header className="course-detail-header">
-          <div className="course-detail-title-block">
-            <h1>Ajouter une leçon</h1>
-            <p className="course-detail-subtitle">
-              Crée une leçon pour ce cours. Ajoute du texte, un lien ou téléverse un fichier (PDF, Vidéo).
+      <div className="lesson-create-card">
+        <header className="lesson-create-header">
+          <div className="lesson-create-title-block">
+            <h1 className="lesson-create-title">Ajouter une leçon</h1>
+            <p className="lesson-create-subtitle">
+              Crée une leçon pour ce cours. Ajoute du texte, un lien externe ou
+              téléverse un fichier (PDF, vidéo, Word).
             </p>
           </div>
         </header>
 
-        <div className="course-detail-body">
-          <div className="course-detail-main">
-            {error && <p className="course-form-error">{error}</p>}
+        <div className="lesson-create-body">
+          <div className="lesson-create-main">
+            {error && <p className="lesson-form-error">{error}</p>}
 
-            <form onSubmit={handleSubmit} className="course-form">
-              <div className="course-form-group">
+            <form onSubmit={handleSubmit} className="lesson-form">
+              {/* Titre */}
+              <div className="lesson-form-group">
                 <label htmlFor="title">Titre de la leçon</label>
                 <input
                   id="title"
@@ -161,7 +160,8 @@ if (!courseId) {
                 />
               </div>
 
-              <div className="course-form-group">
+              {/* Description */}
+              <div className="lesson-form-group">
                 <label htmlFor="description">Description (optionnelle)</label>
                 <textarea
                   id="description"
@@ -169,33 +169,33 @@ if (!courseId) {
                   value={form.description}
                   onChange={handleChange}
                   rows={3}
-                  placeholder="Brève description..."
+                  placeholder="Brève description de la leçon..."
                 />
               </div>
 
-              <div className="course-form-row">
-                <div className="course-form-group">
+              {/* Type + ordre */}
+              <div className="lesson-form-row">
+                <div className="lesson-form-group">
                   <label htmlFor="content_type">Type de contenu</label>
                   <select
                     id="content_type"
                     name="content_type"
                     value={form.content_type}
                     onChange={(e) => {
-                        handleChange(e);
-                        // Reset du fichier si on change de type
-                        setSelectedFile(null); 
+                      handleChange(e);
+                      setSelectedFile(null);
                     }}
                   >
                     <option value="text">Texte</option>
                     <option value="pdf">Fichier PDF</option>
                     <option value="video">Fichier Vidéo</option>
                     <option value="word">Fichier Word</option>
-                    <option value="link">Lien externe (Youtube, Web...)</option>
+                    <option value="link">Lien externe (YouTube, site web...)</option>
                   </select>
                 </div>
 
-                <div className="course-form-group">
-                  <label htmlFor="order">Ordre</label>
+                <div className="lesson-form-group">
+                  <label htmlFor="order">Ordre dans le cours</label>
                   <input
                     id="order"
                     name="order"
@@ -203,13 +203,14 @@ if (!courseId) {
                     min={0}
                     value={form.order}
                     onChange={handleChange}
+                    placeholder="0, 1, 2…"
                   />
                 </div>
               </div>
 
-              {/* Cas 1 : Texte */}
+              {/* Contenu texte */}
               {isTextContent && (
-                <div className="course-form-group">
+                <div className="lesson-form-group">
                   <label htmlFor="content_text">Contenu texte</label>
                   <textarea
                     id="content_text"
@@ -217,42 +218,57 @@ if (!courseId) {
                     value={form.content_text}
                     onChange={handleChange}
                     rows={8}
-                    placeholder="Contenu de la leçon..."
+                    placeholder="Colle ou rédige ici le contenu de la leçon..."
                   />
                 </div>
               )}
 
-              {/* Cas 2 : Upload de Fichier (PDF, Vidéo, Word) */}
+              {/* Upload fichier */}
               {isFileContent && (
-                <div className="course-form-group">
-                  <label>Fichier à téléverser ({form.content_type.toUpperCase()})</label>
-                  {/* Utilisation de vos classes CSS existantes pour faire joli */}
-                  <label htmlFor="file-upload" className="file-input-wrapper">
-                    <span className="file-input-button">Choisir un fichier</span>
-                    <span className="file-input-name">
-                        {selectedFile ? selectedFile.name : "Aucun fichier choisi"}
+                <div className="lesson-form-group">
+                  <label>
+                    Fichier à téléverser (
+                    {form.content_type.toUpperCase()})
+                  </label>
+
+                  <label
+                    htmlFor="lesson-file-upload"
+                    className="lesson-file-input-wrapper"
+                  >
+                    <span className="lesson-file-input-button">
+                      Choisir un fichier
+                    </span>
+                    <span className="lesson-file-input-name">
+                      {selectedFile
+                        ? selectedFile.name
+                        : "Aucun fichier choisi"}
                     </span>
                   </label>
+
                   <input
-                    id="file-upload"
+                    id="lesson-file-upload"
                     type="file"
-                    className="file-input-hidden"
+                    className="lesson-file-input-hidden"
                     accept={
-                        form.content_type === 'pdf' ? "application/pdf" :
-                        form.content_type === 'video' ? "video/*" :
-                        ".doc,.docx,application/msword"
+                      form.content_type === "pdf"
+                        ? "application/pdf"
+                        : form.content_type === "video"
+                        ? "video/*"
+                        : ".doc,.docx,application/msword"
                     }
                     onChange={handleFileChange}
                   />
-                  <p className="course-detail-info">
-                    Le fichier sera envoyé sur Azure Blob Storage.
+
+                  <p className="lesson-info-text">
+                    Le fichier sera envoyé sur Azure Blob Storage, puis lié à
+                    cette leçon.
                   </p>
                 </div>
               )}
 
-              {/* Cas 3 : Lien simple */}
+              {/* Lien externe */}
               {isLinkContent && (
-                <div className="course-form-group">
+                <div className="lesson-form-group">
                   <label htmlFor="content_url">Lien externe</label>
                   <input
                     id="content_url"
@@ -261,13 +277,16 @@ if (!courseId) {
                     onChange={handleChange}
                     placeholder="https://..."
                   />
+                  <p className="lesson-info-text">
+                    Colle ici un lien vers une vidéo, une page web, etc.
+                  </p>
                 </div>
               )}
 
-              <div className="course-form-actions">
+              <div className="lesson-form-actions">
                 <button
                   type="submit"
-                  className="course-btn-primary"
+                  className="lesson-btn-primary"
                   disabled={loading}
                 >
                   {loading ? "Envoi en cours..." : "Créer la leçon"}

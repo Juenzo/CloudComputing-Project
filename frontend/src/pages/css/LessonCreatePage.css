@@ -1,0 +1,310 @@
+/* =========================================
+   THEME VARIABLES (LEÇON)
+   ========================================= */
+
+.app.theme-dark {
+  --lesson-card-bg: radial-gradient(
+      circle at top left,
+      rgba(148, 163, 184, 0.08),
+      rgba(15, 23, 42, 0.96)
+    );
+  --lesson-card-border: rgba(148, 163, 184, 0.35);
+
+  --lesson-input-bg: rgba(15, 23, 42, 0.9);
+  --lesson-input-border: rgba(148, 163, 184, 0.7);
+
+  --lesson-info-color: #9ca3af;
+
+  --lesson-error-bg: rgba(248, 113, 113, 0.1);
+  --lesson-error-border: rgba(239, 68, 68, 0.7);
+  --lesson-error-text: #fecaca;
+
+  --lesson-file-wrapper-bg: radial-gradient(
+    circle at 0 0,
+    rgba(15, 23, 42, 0.85),
+    #020617
+  );
+  --lesson-file-wrapper-shadow: 0 10px 25px rgba(15, 23, 42, 0.6);
+}
+
+.app.theme-light {
+  --lesson-card-bg: radial-gradient(
+      circle at top left,
+      rgba(191, 219, 254, 0.4),
+      rgba(255, 255, 255, 0.98)
+    );
+  --lesson-card-border: rgba(148, 163, 184, 0.35);
+
+  --lesson-input-bg: rgba(248, 250, 252, 0.95);
+  --lesson-input-border: rgba(148, 163, 184, 0.7);
+
+  --lesson-info-color: #6b7280;
+
+  --lesson-error-bg: #fee2e2;
+  --lesson-error-border: rgba(239, 68, 68, 0.9);
+  --lesson-error-text: #b91c1c;
+
+  --lesson-file-wrapper-bg: radial-gradient(
+    circle at 0 0,
+    #eff6ff,
+    #e0f2fe
+  );
+  --lesson-file-wrapper-shadow: 0 10px 25px rgba(148, 163, 184, 0.4);
+}
+
+/* =========================================
+   LAYOUT GENERAL
+   ========================================= */
+
+.lesson-create-wrapper {
+  padding: 2.5rem 0 3rem;
+}
+
+.lesson-create-topbar {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.lesson-create-back {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.lesson-create-back:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+/* Card principale */
+
+.lesson-create-card {
+  width: 100%;
+  max-width: 820px;
+  margin: 0 auto;
+  border-radius: 18px;
+  padding: 1.8rem 2.1rem;
+  border: 1px solid var(--lesson-card-border);
+  background: var(--lesson-card-bg);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(18px);
+}
+
+/* Header de la page */
+
+.lesson-create-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.25rem;
+  margin-bottom: 1.3rem;
+}
+
+.lesson-create-title-block {
+  flex: 1;
+}
+
+.lesson-create-title {
+  margin: 0 0 0.3rem;
+  font-size: 1.6rem;
+}
+
+.lesson-create-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  opacity: 0.8;
+}
+
+/* Corps */
+
+.lesson-create-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.lesson-create-main {
+  flex: 1;
+}
+
+/* =========================================
+   FORMULAIRE LEÇON
+   ========================================= */
+
+.lesson-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.lesson-form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .lesson-form-row {
+    flex-direction: column;
+  }
+}
+
+.lesson-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+}
+
+.lesson-form-group label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Inputs / textarea / select */
+
+.lesson-form-group input,
+.lesson-form-group textarea,
+.lesson-form-group select {
+  border-radius: 10px;
+  border: 1px solid var(--lesson-input-border);
+  padding: 0.6rem 0.8rem;
+  font-size: 0.95rem;
+  outline: none;
+  background: var(--lesson-input-bg);
+  color: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.lesson-form-group textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.lesson-form-group input::placeholder,
+.lesson-form-group textarea::placeholder {
+  color: #9ca3af;
+}
+
+.lesson-form-group input:focus,
+.lesson-form-group textarea:focus,
+.lesson-form-group select:focus {
+  border-color: rgba(59, 130, 246, 0.9);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35);
+}
+
+/* Bouton principal */
+
+.lesson-form-actions {
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.lesson-btn-primary {
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.4rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: #f9fafb;
+  background: var(--nav-primary-bg); /* défini dans index.css */
+  box-shadow: 0 14px 35px rgba(37, 99, 235, 0.55);
+  transition: transform 0.12s ease, box-shadow 0.12s ease,
+    background 0.12s ease, opacity 0.12s ease;
+}
+
+.lesson-btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px) scale(1.02);
+  background: var(--nav-primary-hover-bg);
+  box-shadow: 0 20px 50px rgba(37, 99, 235, 0.7);
+}
+
+.lesson-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.35);
+}
+
+/* Messages */
+
+.lesson-form-error {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  background: var(--lesson-error-bg);
+  border: 1px solid var(--lesson-error-border);
+  color: var(--lesson-error-text);
+}
+
+.lesson-info-text {
+  margin-top: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--lesson-info-color);
+}
+
+/* =========================================
+   UPLOAD FICHIER
+   ========================================= */
+
+.lesson-file-input-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.lesson-file-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--lesson-input-border);
+  cursor: pointer;
+  background: var(--lesson-file-wrapper-bg);
+  box-shadow: var(--lesson-file-wrapper-shadow);
+  transition: transform 0.12s ease, box-shadow 0.12s ease,
+    border-color 0.12s ease, background 0.12s ease;
+}
+
+.lesson-file-input-wrapper:hover {
+  transform: translateY(-1px) scale(1.01);
+  border-color: rgba(59, 130, 246, 0.9);
+  box-shadow: 0 16px 35px rgba(37, 99, 235, 0.45);
+}
+
+.lesson-file-input-button {
+  padding: 0.3rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f9fafb;
+  background: var(--nav-primary-bg);
+  white-space: nowrap;
+}
+
+.lesson-file-input-name {
+  font-size: 0.85rem;
+  color: #e5e7eb;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app.theme-light .lesson-file-input-name {
+  color: #6b7280;
+}
+
+/* Responsive header */
+
+@media (max-width: 640px) {
+  .lesson-create-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
