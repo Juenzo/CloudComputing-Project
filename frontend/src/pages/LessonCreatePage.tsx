@@ -132,22 +132,22 @@ const LessonCreatePage: React.FC = () => {
     setLoading(true);
 
     try {
-      const payload = {
-        title: form.title,
-        description: form.description || null,
-        content_type: form.content_type,
-        content_url:
-          form.content_type === "text" ? null : form.content_url || null,
-        content_text:
-          form.content_type === "text" ? form.content_text || null : null,
-        order: form.order ?? 0,
-        course_id: Number(courseId),
-      };
+      const fd = new FormData();
+      fd.append("title", form.title);
+      if (form.description) fd.append("description", form.description);
+      fd.append("content_type", form.content_type);
+      fd.append("order", String(form.order ?? 0));
+      fd.append("course_id", String(Number(courseId)));
+
+      if (form.content_type === "text") {
+        if (form.content_text) fd.append("content_text", form.content_text);
+      } else {
+        if (form.content_url) fd.append("content_url", form.content_url);
+      }
 
       const res = await fetch("/api/lessons", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: fd,
       });
 
       if (!res.ok) {
