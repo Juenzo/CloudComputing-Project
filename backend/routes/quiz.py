@@ -58,6 +58,41 @@ def create_full_quiz(course_id: int, quiz_data: FullQuizCreate, session: Session
     session.commit()
     return db_quiz
 
+@router.put("/courses/{course_id}/quiz", response_model=QuizRead)
+def replace_quiz_for_course(course_id: int, quiz_data: FullQuizCreate, session: Session = Depends(get_session)):
+    """
+    Remplace le quiz du cours (si existant) par celui fourni.
+    Stratégie simple: supprimer les quiz existants du cours puis recréer.
+    """
+    course = session.get(Course, course_id)
+    if not course:
+        raise HTTPException(status_code=404, detail="Cours introuvable")
+
+    # Supprimer tous les quiz du cours (questions/choix supprimés en cascade)
+    existing_quizzes = session.exec(select(Quiz).where(Quiz.course_id == course_id)).all()
+    for q in existing_quizzes:
+        session.delete(q)
+    session.commit()
+
+    # Recréer avec les nouvelles données
+    new_quiz = Quiz(title=quiz_data.title, description=quiz_data.description, order=quiz_data.order, course_id=course_id)
+    session.add(new_quiz)
+    session.commit()
+    session.refresh(new_quiz)
+
+    for q_data in quiz_data.questions:
+        db_question = QuizQuestion(text=q_data.text, points=q_data.points, quiz_id=new_quiz.id)
+        session.add(db_question)
+        session.commit()
+        session.refresh(db_question)
+
+        for c_data in q_data.choices:
+            db_choice = QuizChoice(text=c_data.text, is_correct=c_data.is_correct, question_id=db_question.id)
+            session.add(db_choice)
+
+    session.commit()
+    return new_quiz
+
 @router.get("/courses/{course_id}/quiz", response_model=List[QuizRead])
 def list_quiz_for_course(course_id: int, session: Session = Depends(get_session)):
     quiz = session.exec(select(Quiz).where(Quiz.course_id == course_id).order_by(Quiz.order)).all()

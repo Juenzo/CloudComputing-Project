@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 
 interface AnswerForm {
@@ -27,9 +27,59 @@ const QuizCreatePage: React.FC = () => {
   const [questions, setQuestions] = useState<QuestionForm[]>([
     createEmptyQuestion(),
   ]);
+  const [existingQuizId, setExistingQuizId] = useState<number | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
+
+  useEffect(() => {
+    const loadExistingQuiz = async () => {
+      if (!courseId) return;
+      try {
+        setLoading(true);
+        setError("");
+        setSuccess("");
+        // 1) Cherche s'il existe au moins un quiz pour ce cours
+        const listRes = await fetch(`/api/courses/${courseId}/quiz`);
+        if (!listRes.ok) throw new Error(`Erreur HTTP ${listRes.status}`);
+        const quizList: Array<{ id: number; title: string }> = await listRes.json();
+        if (!quizList || quizList.length === 0) {
+          setExistingQuizId(null);
+          setQuestions([createEmptyQuestion()]);
+          return;
+        }
+        const firstId = quizList[0].id;
+        setExistingQuizId(firstId);
+
+        // 2) Charge le détail complet (incluant is_correct) pour l'éditeur
+        const detailRes = await fetch(`/api/quiz/${firstId}/full`);
+        if (!detailRes.ok) throw new Error(`Erreur HTTP ${detailRes.status}`);
+        const detail: {
+          id: number;
+          questions: Array<{
+            id: number;
+            text: string;
+            points: number;
+            choices: Array<{ id: number; text: string; is_correct: boolean }>;
+          }>;
+        } = await detailRes.json();
+
+        const mapped: QuestionForm[] = detail.questions.map((q) => ({
+          questionText: q.text,
+          answers: q.choices.map((c) => ({ text: c.text, isCorrect: c.is_correct })),
+        }));
+        if (mapped.length > 0) setQuestions(mapped);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Erreur inconnue";
+        setError(message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadExistingQuiz();
+  }, [courseId]);
 
   const updateQuestionText = (index: number, text: string) => {
     setQuestions((prev) =>
@@ -83,9 +133,27 @@ const QuizCreatePage: React.FC = () => {
     setSaving(true);
 
     try {
-      const payload = { questions };
-      const res = await fetch(`/api/courses/${courseId}/quiz`, {
-        method: "POST",
+      // Adapter le payload au format attendu par l'API backend
+      const payload = {
+        title: "Quiz", // titre requis par QuizCreate
+        description: null,
+        order: 0,
+        course_id: Number(courseId),
+        questions: questions.map((q) => ({
+          text: q.questionText,
+          points: 1,
+          choices: q.answers.map((a) => ({
+            text: a.text,
+            is_correct: a.isCorrect,
+          })),
+        })),
+      };
+      const endpoint = existingQuizId
+        ? `/api/courses/${courseId}/quiz`
+        : `/api/courses/${courseId}/quiz`;
+      const method = existingQuizId ? "PUT" : "POST";
+      const res = await fetch(endpoint, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -94,7 +162,7 @@ const QuizCreatePage: React.FC = () => {
         throw new Error(`Erreur HTTP ${res.status}`);
       }
 
-      setSuccess("Quiz enregistré avec succès !");
+      setSuccess(existingQuizId ? "Quiz mis à jour avec succès !" : "Quiz enregistré avec succès !");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Erreur inconnue";
       setError(message);
@@ -126,7 +194,7 @@ const QuizCreatePage: React.FC = () => {
         {/* HEADER */}
         <header className="course-detail-header">
           <div className="course-detail-title-block">
-            <h1>Configurer le quiz</h1>
+            <h1>{existingQuizId ? "Modifier le quiz" : "Configurer le quiz"}</h1>
             <p className="course-detail-subtitle">
               Crée des questions à choix multiples pour évaluer les
               connaissances sur ce cours.
@@ -137,6 +205,7 @@ const QuizCreatePage: React.FC = () => {
         {/* BODY */}
         <div className="course-detail-body">
           <div className="course-detail-main">
+            {loading && <p>Chargement du quiz existant…</p>}
             {error && <p className="course-form-error">{error}</p>}
             {success && (
               <p className="course-form-success">{success}</p>
@@ -212,10 +281,10 @@ const QuizCreatePage: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={saving}
+                  disabled={saving || loading}
                   className="course-btn-primary"
                 >
-                  {saving ? "Enregistrement..." : "Enregistrer le quiz"}
+                  {saving ? (existingQuizId ? "Mise à jour..." : "Enregistrement...") : (existingQuizId ? "Mettre à jour le quiz" : "Enregistrer le quiz")}
                 </button>
               </div>
             </form>
