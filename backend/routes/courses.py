@@ -97,45 +97,69 @@ def create_lesson(
     course_id: int = Form(...),
     title: str = Form(...),
     description: str = Form(None),
+    content_type: str = Form("text"),
+    content_text: str = Form(None),
+    content_url: str = Form(None),
+    order: int = Form(0),
     file: UploadFile = File(None),
     session: Session = Depends(get_session)
 ):
     """
     Ajoute une leçon à un cours.
-    Gère l'upload du fichier PDF/Vidéo vers Azure Blob Storage.
+    Supporte 2 modes:
+    - contenu texte (content_type=text + content_text)
+    - contenu fichier (upload) ou lien externe (content_url)
     """
     if not session.get(Course, course_id):
         raise HTTPException(status_code=404, detail="Cours lié introuvable")
-        
-    content_url = None
-    content_type = "text" 
 
+    final_content_type = content_type or "text"
+    final_content_url = None
+    final_content_text = None
+
+    # Gestion upload fichier si présent
     if file:
         try:
-            ext = file.filename.split(".")[-1] if "." in file.filename else "bin"
+            ext = file.filename.split(".")[-1].lower() if "." in file.filename else "bin"
             unique_filename = f"{uuid.uuid4()}.{ext}"
-            
-            # Upload vers Azure
+
             upload_file_to_blob(file.file, unique_filename)
 
-            content_url = unique_filename
-            
-            if ext.lower() == "pdf":
-                content_type = "pdf"
-            elif ext.lower() in ["mp4", "mov", "avi"]:
-                content_type = "video"
-            else:
-                content_type = "file"
+            final_content_url = unique_filename
 
+            if ext == "pdf":
+                final_content_type = "pdf"
+            elif ext in ["mp4", "mov", "avi"]:
+                final_content_type = "video"
+            elif ext in ["doc", "docx"]:
+                final_content_type = "word"
+            else:
+                # Par défaut, on garde le type fourni ou texte
+                final_content_type = final_content_type or "text"
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Erreur upload Azure : {str(e)}")
+    else:
+        # Pas de fichier: soit texte, soit lien externe
+        if (final_content_type == "text") and content_text:
+            final_content_text = content_text
+        elif final_content_type in ["pdf", "video", "word", "link"] and content_url:
+            final_content_url = content_url
+
+    # Validation du type via l'Enum côté modèle
+    try:
+        from ..models import ContentType as ContentTypeEnum
+        enum_type = ContentTypeEnum(final_content_type)
+    except Exception:
+        raise HTTPException(status_code=422, detail=f"content_type invalide: {final_content_type}")
 
     db_lesson = Lesson(
         title=title,
         description=description,
         course_id=course_id,
-        content_type=content_type,
-        content_url=content_url,
+        order=order,
+        content_type=enum_type,
+        content_url=final_content_url,
+        content_text=final_content_text,
     )
 
     session.add(db_lesson)
@@ -156,8 +180,8 @@ def get_lesson_details(lesson_id: int, session: Session = Depends(get_session)):
     response = lesson.model_dump()
     
     # Si la leçon contient un fichier stocké sur Azure (content_url)
-    if lesson.content_url:
-        # On génère le lien magique (SAS) valable 1h
+    # On ne signe QUE si c'est un blob interne (pas une URL http(s))
+    if lesson.content_url and not str(lesson.content_url).lower().startswith(("http://", "https://")):
         signed_url = generate_sas_url(lesson.content_url)
         response["content_url_signed"] = signed_url
     
