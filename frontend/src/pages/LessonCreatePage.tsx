@@ -31,15 +31,18 @@ const LessonCreatePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
 
-  if (!courseId) {
-    return (
-      <section className="course-detail-wrapper">
+if (!courseId) {
+  return (
+    <section className="course-detail-wrapper">
+      <div className="course-detail-card">
         <p className="course-form-error">
           ID du cours manquant dans l’URL.
         </p>
-      </section>
-    );
-  }
+      </div>
+    </section>
+  );
+}
+
 
   const handleChange = (
     e: React.ChangeEvent<
