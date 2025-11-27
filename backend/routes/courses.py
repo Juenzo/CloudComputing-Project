@@ -120,22 +120,34 @@ def create_lesson(
     # Gestion upload fichier si présent
     if file:
         try:
+            print(f"Fichier reçu: {file.filename}") # DEBUG
             ext = file.filename.split(".")[-1].lower() if "." in file.filename else "bin"
             unique_filename = f"{uuid.uuid4()}.{ext}"
 
-            upload_file_to_blob(file.file, unique_filename)
+            # Détermination du Content-Type pour Azure
+            mime_type = file.content_type # FastAPI nous donne souvent le bon type
+            
+            # Forçage manuel si besoin pour être sûr
+            if ext == "pdf":
+                mime_type = "application/pdf"
+            elif ext in ["mp4", "mov", "avi"]:
+                mime_type = "video/mp4" # ou adapté selon l'extension
+            
+            # 1. Lecture du fichier
+            print("Lecture du fichier en cours...") 
+            file_content = file.file.read()
+            print(f"Fichier lu ({len(file_content)} octets). Envoi vers Azure avec type {mime_type}...")
+
+            # 2. Upload AVEC le content_type
+            upload_file_to_blob(file_content, unique_filename, content_type=mime_type)
+            print("Upload Azure RÉUSSI !")
 
             final_content_url = unique_filename
 
+            # ... (la suite pour final_content_type reste inchangée)
             if ext == "pdf":
                 final_content_type = "pdf"
-            elif ext in ["mp4", "mov", "avi"]:
-                final_content_type = "video"
-            elif ext in ["doc", "docx"]:
-                final_content_type = "word"
-            else:
-                # Par défaut, on garde le type fourni ou texte
-                final_content_type = final_content_type or "text"
+                
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Erreur upload Azure : {str(e)}")
     else:
