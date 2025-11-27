@@ -52,21 +52,20 @@ const CourseCreatePage: React.FC = () => {
     setLoading(true);
 
     try {
-
-      // 👉 Construction du FormData
-      const formData = new FormData();
-      formData.append("title", form.title);
-      formData.append("description", form.description);
-      formData.append("category", form.category);
-      formData.append("level", form.level);
-
-      // Génération du slug à partir du titre
-      const slug = form.title.toLowerCase().trim().replace(/\s+/g, "-");
-      formData.append("slug", slug);
+      // 👉 Prépare le payload JSON attendu par FastAPI (CourseCreate)
+      const payload: CreateCoursePayload = {
+        title: form.title,
+        description: form.description,
+        category: form.category,
+        level: form.level,
+        // Le backend auto-génère le slug si non fourni, mais on envoie le nôtre
+        slug: form.title.toLowerCase().trim().replace(/\s+/g, "-"),
+      };
 
       const res = await fetch("/api/courses", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -91,8 +90,7 @@ const CourseCreatePage: React.FC = () => {
       }
 
       const created: CourseResponse = await res.json();
-
-      // Redirection vers la page de détail du cours
+      // Redirection vers la page de détail du cours (id numérique côté backend)
       navigate(`/courses/${created.id}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Erreur inconnue";

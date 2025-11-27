@@ -138,6 +138,42 @@ def get_quiz_details_for_student(quiz_id: int, session: Session = Depends(get_se
         
     return result
 
+@router.get("/quiz/{quiz_id}/full")
+def get_quiz_details_for_editor(quiz_id: int, session: Session = Depends(get_session)):
+    """
+    Récupère le quiz avec ses questions et choix, en INCLUANT is_correct.
+    Utile pour l'éditeur/administration afin de pré-remplir le formulaire.
+    """
+    quiz = session.get(Quiz, quiz_id)
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Quiz introuvable")
+
+    result = {
+        "id": quiz.id,
+        "title": quiz.title,
+        "description": quiz.description,
+        "questions": []
+    }
+
+    questions = session.exec(select(QuizQuestion).where(QuizQuestion.quiz_id == quiz_id)).all()
+    for q in questions:
+        q_data = {
+            "id": q.id,
+            "text": q.text,
+            "points": q.points,
+            "choices": []
+        }
+        choices = session.exec(select(QuizChoice).where(QuizChoice.question_id == q.id)).all()
+        for c in choices:
+            q_data["choices"].append({
+                "id": c.id,
+                "text": c.text,
+                "is_correct": c.is_correct
+            })
+        result["questions"].append(q_data)
+
+    return result
+
 # --- ROUTE CORRECTION ---
 
 class UserAnswer(BaseModel):
