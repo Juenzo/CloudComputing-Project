@@ -854,3 +854,137 @@ a {
     max-width: 100%;
   }
 }
+
+/* =========================================
+   PAGE : CREATION / EDITION DE QUIZ
+   ========================================= */
+
+.quiz-question-card {
+  border-radius: 14px;
+  padding: 1rem 1.1rem 1.1rem;
+  border: 1px solid var(--header-border);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.35);
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+/* fond de la “mini-card” question selon le thème */
+.app.theme-dark .quiz-question-card {
+  background: radial-gradient(
+      circle at top left,
+      rgba(148, 163, 184, 0.12),
+      rgba(15, 23, 42, 0.98)
+    );
+}
+
+.app.theme-light .quiz-question-card {
+  background: radial-gradient(
+      circle at top left,
+      rgba(219, 234, 254, 0.35),
+      rgba(255, 255, 255, 0.98)
+    );
+}
+
+.quiz-question-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.quiz-question-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.45);
+}
+
+/* bloc réponses */
+
+.quiz-answers {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-top: 0.2rem;
+}
+
+.quiz-answers-title {
+  margin: 0 0 0.15rem;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.quiz-answer-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quiz-answer-radio {
+  flex-shrink: 0;
+}
+
+.quiz-answer-input {
+  flex: 1;
+}
+
+/* alignement des boutons en bas du formulaire */
+
+.quiz-actions {
+  gap: 0.6rem;
+}
+
+/* bouton outline réutilisable */
+
+.course-btn-outline {
+  border-radius: 999px;
+  padding: 0.55rem 1.4rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: transparent;
+  color: inherit;
+  border: 1px solid rgba(148, 163, 184, 0.9);
+  transition: transform 0.12s ease, box-shadow 0.12s ease,
+    border-color 0.12s ease, background 0.12s ease;
+}
+
+.app.theme-dark .course-btn-outline {
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.6);
+  background: radial-gradient(circle at 0 0, #0b1120, #020617);
+}
+
+.app.theme-light .course-btn-outline {
+  box-shadow: 0 10px 25px rgba(148, 163, 184, 0.35);
+  background: radial-gradient(circle at 0 0, #eff6ff, #e0f2fe);
+}
+
+.course-btn-outline:hover {
+  transform: translateY(-1px) scale(1.02);
+  border-color: rgba(59, 130, 246, 0.9);
+  box-shadow: 0 16px 35px rgba(37, 99, 235, 0.45);
+}
+
+/* message de succès cohérent avec message d'erreur */
+
+.course-form-success {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  border: 1px solid rgba(34, 197, 94, 0.7);
+  background: rgba(22, 163, 74, 0.12);
+  color: #bbf7d0;
+}
+
+.app.theme-light .course-form-success {
+  background: #dcfce7;
+  color: #166534;
+}
