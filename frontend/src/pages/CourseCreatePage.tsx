@@ -1,6 +1,17 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+// Types locaux pour éviter les erreurs de compilation
+type CourseLevel = "Beginner" | "Intermediate" | "Advanced";
+
+interface CreateCoursePayload {
+  title: string;
+  description: string;
+  category: string;
+  level: CourseLevel;
+  slug: string;
+}
+
 interface CreateCourseForm {
   title: string;
   description: string;
@@ -25,6 +36,7 @@ const CourseCreatePage: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -53,45 +65,26 @@ const CourseCreatePage: React.FC = () => {
       // 👉 Construction du FormData (PDF + champs texte)
       const formData = new FormData();
       formData.append("pdf", pdfFile);
-
       formData.append("title", form.title);
       formData.append("description", form.description);
       formData.append("category", form.category);
       formData.append("level", form.level);
 
       // Génération du slug à partir du titre
-      const slug = form.title
-        .toLowerCase()
-        .trim()
-
-      const payload = {
-        ...form,
-        slug,
-        // image_url: null, // à remplir plus tard si tu gères une image
-      };
+      const slug = form.title.toLowerCase().trim().replace(/\s+/g, "-");
+      formData.append("slug", slug);
 
       const res = await fetch("/api/courses", {
         method: "POST",
         body: formData,
-        // ⚠️ NE PAS mettre Content-Type ici, le navigateur le gère (multipart/form-data + boundary)
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.detail || `Erreur HTTP ${res.status}`);
-      }
-
-      const created: CourseResponse = await res.json();
         let message = `Erreur HTTP ${res.status}`;
         try {
           const errData = await res.json();
-          if (errData.detail) {
+          if (errData?.detail) {
             if (Array.isArray(errData.detail)) {
-              // Erreurs de validation FastAPI
               message = errData.detail
                 .map((d: any) => d.msg || JSON.stringify(d))
                 .join(" | ");
@@ -102,12 +95,12 @@ const CourseCreatePage: React.FC = () => {
             }
           }
         } catch {
-          // on garde le message par défaut
+          // ignorer si la réponse erreur n'est pas JSON
         }
         throw new Error(message);
       }
 
-      const created = await res.json();
+      const created: CourseResponse = await res.json();
 
       // Redirection vers la page de détail du cours
       navigate(`/courses/${created.id}`);
