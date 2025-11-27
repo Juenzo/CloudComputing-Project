@@ -100,7 +100,7 @@ const LessonDetailPage: React.FC = () => {
           </div>
         </header>
 
-        <div className="course-detail-body">
+        <div className="course-detail-body" style={{ gridTemplateColumns: "1fr" }}>
           <div className="course-detail-main">
             {lesson.description && (
               <section className="course-detail-section">
