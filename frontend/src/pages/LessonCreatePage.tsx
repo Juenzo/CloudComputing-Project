@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
+import "./css/LessonCreatePage.css";
 
 type ContentType = "video" | "pdf" | "word" | "text" | "link";
 
@@ -7,7 +8,7 @@ interface LessonForm {
   title: string;
   description: string;
   content_type: ContentType;
-  content_url: string;   // pour PDF / vidéo / lien
+  content_url: string;   // pour type "link"
   content_text: string;  // pour contenu texte
   order: number;
 }
@@ -25,18 +26,19 @@ const LessonCreatePage: React.FC = () => {
     order: 0,
   });
 
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
 
-  // état pour l’upload de PDF
-  const [uploadingPdf, setUploadingPdf] = useState(false);
-  const [pdfUploadError, setPdfUploadError] = useState<string>("");
-  const [pdfOriginalName, setPdfOriginalName] = useState<string>("");
-
+  // Si l'URL est cassée
   if (!courseId) {
     return (
-      <section className="course-detail-wrapper">
-        <p className="course-form-error">ID du cours manquant dans l’URL.</p>
+      <section className="lesson-create-wrapper">
+        <div className="lesson-create-card">
+          <p className="lesson-form-error">
+            ID du cours manquant dans l’URL.
+          </p>
+        </div>
       </section>
     );
   }
@@ -47,82 +49,15 @@ const LessonCreatePage: React.FC = () => {
     >
   ) => {
     const { name, value } = e.target;
-
-    setForm((prev) => {
-      if (name === "order") {
-        return { ...prev, order: Number(value) };
-      }
-
-      if (name === "content_type") {
-        const newType = value as ContentType;
-        return {
-          ...prev,
-          content_type: newType,
-          // on peut garder ou reset certains champs si tu veux
-          content_url: newType === "text" ? "" : prev.content_url,
-          content_text: newType === "text" ? prev.content_text : prev.content_text,
-        };
-      }
-
-      return {
-        ...prev,
-        [name]: value,
-      };
-    });
+    setForm((prev) => ({
+      ...prev,
+      [name]: name === "order" ? Number(value) : value,
+    }));
   };
 
-  const handlePdfFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setPdfUploadError("");
-    setUploadingPdf(true);
-
-    try {
-      const formData = new FormData();
-      // doit être "file" pour matcher : upload_file(file: UploadFile = File(...))
-      formData.append("file", file);
-
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) {
-        let message = `Erreur upload PDF (HTTP ${res.status})`;
-        try {
-          const errData = await res.json();
-          if (errData.detail) {
-            message =
-              typeof errData.detail === "string"
-                ? errData.detail
-                : JSON.stringify(errData.detail);
-          }
-        } catch {
-          // on garde le message de base
-        }
-        throw new Error(message);
-      }
-
-      const data: {
-        filename: string;
-        original_name: string;
-        message?: string;
-      } = await res.json();
-
-      // on stocke la clé retournée par l’API dans content_url
-      setForm((prev) => ({
-        ...prev,
-        content_url: data.filename,
-      }));
-
-      setPdfOriginalName(data.original_name || file.name);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Erreur inconnue lors de l’upload du PDF";
-      setPdfUploadError(message);
-    } finally {
-      setUploadingPdf(false);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setSelectedFile(e.target.files[0]);
     }
   };
 
@@ -141,7 +76,15 @@ const LessonCreatePage: React.FC = () => {
 
       if (form.content_type === "text") {
         if (form.content_text) fd.append("content_text", form.content_text);
-      } else {
+      } else if (["pdf", "video", "word"].includes(form.content_type)) {
+        if (selectedFile) {
+          fd.append("file", selectedFile);
+        } else {
+          throw new Error(
+            "Veuillez sélectionner un fichier pour ce type de leçon."
+          );
+        }
+      } else if (form.content_type === "link") {
         if (form.content_url) fd.append("content_url", form.content_url);
       }
 
@@ -155,15 +98,10 @@ const LessonCreatePage: React.FC = () => {
         try {
           const errData = await res.json();
           if (errData.detail) {
-            if (Array.isArray(errData.detail)) {
-              message = errData.detail
-                .map((d: any) => d.msg || JSON.stringify(d))
-                .join(" | ");
-            } else if (typeof errData.detail === "string") {
-              message = errData.detail;
-            } else {
-              message = JSON.stringify(errData.detail);
-            }
+            message =
+              typeof errData.detail === "string"
+                ? errData.detail
+                : JSON.stringify(errData.detail);
           }
         } catch {
           // on garde le message de base
@@ -171,7 +109,6 @@ const LessonCreatePage: React.FC = () => {
         throw new Error(message);
       }
 
-      // Retour au cours
       navigate(`/courses/${courseId}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Erreur inconnue";
@@ -182,37 +119,35 @@ const LessonCreatePage: React.FC = () => {
   };
 
   const isTextContent = form.content_type === "text";
-  const isUrlContent =
-    form.content_type === "pdf" ||
-    form.content_type === "video" ||
-    form.content_type === "word" ||
-    form.content_type === "link";
+  const isLinkContent = form.content_type === "link";
+  const isFileContent = ["pdf", "video", "word"].includes(form.content_type);
 
   return (
-    <section className="course-detail-wrapper">
-      <div className="course-detail-topbar">
-        <Link to={`/courses/${courseId}`} className="course-detail-back">
+    <section className="lesson-create-wrapper">
+      <div className="lesson-create-topbar">
+        <Link to={`/courses/${courseId}`} className="lesson-create-back">
           ← Retour au cours
         </Link>
       </div>
 
-      <div className="course-detail-card">
-        <header className="course-detail-header">
-          <div className="course-detail-title-block">
-            <h1>Ajouter une leçon</h1>
-            <p className="course-detail-subtitle">
-              Crée une leçon pour ce cours. Tu peux choisir un contenu texte
-              ou une ressource externe (PDF, vidéo, lien…).
+      <div className="lesson-create-card">
+        <header className="lesson-create-header">
+          <div className="lesson-create-title-block">
+            <h1 className="lesson-create-title">Ajouter une leçon</h1>
+            <p className="lesson-create-subtitle">
+              Crée une leçon pour ce cours. Ajoute du texte, un lien externe ou
+              téléverse un fichier (PDF, vidéo, Word).
             </p>
           </div>
         </header>
 
-        <div className="course-detail-body">
-          <div className="course-detail-main">
-            {error && <p className="course-form-error">{error}</p>}
+        <div className="lesson-create-body">
+          <div className="lesson-create-main">
+            {error && <p className="lesson-form-error">{error}</p>}
 
-            <form onSubmit={handleSubmit} className="course-form">
-              <div className="course-form-group">
+            <form onSubmit={handleSubmit} className="lesson-form">
+              {/* Titre */}
+              <div className="lesson-form-group">
                 <label htmlFor="title">Titre de la leçon</label>
                 <input
                   id="title"
@@ -220,11 +155,12 @@ const LessonCreatePage: React.FC = () => {
                   value={form.title}
                   onChange={handleChange}
                   required
-                  placeholder="Ex : Introduction au modèle IaaS / PaaS / SaaS"
+                  placeholder="Ex : Introduction au Cloud"
                 />
               </div>
 
-              <div className="course-form-group">
+              {/* Description */}
+              <div className="lesson-form-group">
                 <label htmlFor="description">Description (optionnelle)</label>
                 <textarea
                   id="description"
@@ -232,28 +168,32 @@ const LessonCreatePage: React.FC = () => {
                   value={form.description}
                   onChange={handleChange}
                   rows={3}
-                  placeholder="Brève description de ce que couvre cette leçon."
+                  placeholder="Brève description de la leçon..."
                 />
               </div>
 
-              <div className="course-form-row">
-                <div className="course-form-group">
+              {/* Type + ordre */}
+              <div className="lesson-form-row">
+                <div className="lesson-form-group">
                   <label htmlFor="content_type">Type de contenu</label>
                   <select
                     id="content_type"
                     name="content_type"
                     value={form.content_type}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      handleChange(e);
+                      setSelectedFile(null);
+                    }}
                   >
                     <option value="text">Texte</option>
-                    <option value="pdf">PDF</option>
-                    <option value="video">Vidéo</option>
-                    <option value="word">Document Word</option>
-                    <option value="link">Lien externe</option>
+                    <option value="pdf">Fichier PDF</option>
+                    <option value="video">Fichier Vidéo</option>
+                    <option value="word">Fichier Word</option>
+                    <option value="link">Lien externe (YouTube, site web...)</option>
                   </select>
                 </div>
 
-                <div className="course-form-group">
+                <div className="lesson-form-group">
                   <label htmlFor="order">Ordre dans le cours</label>
                   <input
                     id="order"
@@ -269,104 +209,86 @@ const LessonCreatePage: React.FC = () => {
 
               {/* Contenu texte */}
               {isTextContent && (
-                <div className="course-form-group">
-                  <label htmlFor="content_text">
-                    Contenu texte de la leçon
-                  </label>
+                <div className="lesson-form-group">
+                  <label htmlFor="content_text">Contenu texte</label>
                   <textarea
                     id="content_text"
                     name="content_text"
                     value={form.content_text}
                     onChange={handleChange}
                     rows={8}
-                    placeholder="Colle ici le contenu de la leçon, un résumé ou un texte explicatif."
+                    placeholder="Colle ou rédige ici le contenu de la leçon..."
                   />
                 </div>
               )}
 
-              {/* URL ou upload selon le type */}
-              {isUrlContent && (
-                <div className="course-form-group">
-                  {form.content_type === "pdf" ? (
-                    <>
-                      <label htmlFor="pdf-upload">
-                        Fichier PDF (upload vers Azure)
-                      </label>
+              {/* Upload fichier */}
+              {isFileContent && (
+                <div className="lesson-form-group">
+                  <label>
+                    Fichier à téléverser (
+                    {form.content_type.toUpperCase()})
+                  </label>
 
-                      <label
-                        htmlFor="pdf-upload"
-                        className="file-input-wrapper"
-                      >
-                        <span className="file-input-button">
-                          {uploadingPdf
-                            ? "Upload en cours..."
-                            : "Choisir un PDF"}
-                        </span>
-                        <span className="file-input-name">
-                          {pdfOriginalName
-                            ? pdfOriginalName
-                            : "Aucun fichier sélectionné"}
-                        </span>
-                      </label>
+                  <label
+                    htmlFor="lesson-file-upload"
+                    className="lesson-file-input-wrapper"
+                  >
+                    <span className="lesson-file-input-button">
+                      Choisir un fichier
+                    </span>
+                    <span className="lesson-file-input-name">
+                      {selectedFile
+                        ? selectedFile.name
+                        : "Aucun fichier choisi"}
+                    </span>
+                  </label>
 
-                      <input
-                        id="pdf-upload"
-                        type="file"
-                        accept="application/pdf"
-                        onChange={handlePdfFileChange}
-                        className="file-input-hidden"
-                        disabled={uploadingPdf}
-                      />
+                  <input
+                    id="lesson-file-upload"
+                    type="file"
+                    className="lesson-file-input-hidden"
+                    accept={
+                      form.content_type === "pdf"
+                        ? "application/pdf"
+                        : form.content_type === "video"
+                        ? "video/*"
+                        : ".doc,.docx,application/msword"
+                    }
+                    onChange={handleFileChange}
+                  />
 
-                      {pdfUploadError && (
-                        <p className="course-form-error">
-                          {pdfUploadError}
-                        </p>
-                      )}
-
-                      {form.content_url && !pdfUploadError && (
-                        <p className="course-detail-info">
-                          Fichier chargé, clé stockée :{" "}
-                          <code>{form.content_url}</code>
-                        </p>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <label htmlFor="content_url">
-                        URL du contenu (
-                        {form.content_type === "video"
-                          ? "lien vers la vidéo"
-                          : form.content_type === "word"
-                          ? "lien vers le document"
-                          : form.content_type === "link"
-                          ? "lien externe"
-                          : "URL du contenu"}
-                        )
-                      </label>
-                      <input
-                        id="content_url"
-                        name="content_url"
-                        value={form.content_url}
-                        onChange={handleChange}
-                        placeholder="https://…"
-                      />
-                      <p className="course-detail-info">
-                        Plus tard, cette URL pourra être une URL signée Azure
-                        Blob générée par le backend.
-                      </p>
-                    </>
-                  )}
+                  <p className="lesson-info-text">
+                    Le fichier sera envoyé sur Azure Blob Storage, puis lié à
+                    cette leçon.
+                  </p>
                 </div>
               )}
 
-              <div className="course-form-actions">
+              {/* Lien externe */}
+              {isLinkContent && (
+                <div className="lesson-form-group">
+                  <label htmlFor="content_url">Lien externe</label>
+                  <input
+                    id="content_url"
+                    name="content_url"
+                    value={form.content_url}
+                    onChange={handleChange}
+                    placeholder="https://..."
+                  />
+                  <p className="lesson-info-text">
+                    Colle ici un lien vers une vidéo, une page web, etc.
+                  </p>
+                </div>
+              )}
+
+              <div className="lesson-form-actions">
                 <button
                   type="submit"
-                  className="course-btn-primary"
+                  className="lesson-btn-primary"
                   disabled={loading}
                 >
-                  {loading ? "Création de la leçon..." : "Créer la leçon"}
+                  {loading ? "Envoi en cours..." : "Créer la leçon"}
                 </button>
               </div>
             </form>
