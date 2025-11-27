@@ -28,12 +28,15 @@ const LessonCreatePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
 
+  // état pour l’upload de PDF
+  const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [pdfUploadError, setPdfUploadError] = useState<string>("");
+  const [pdfOriginalName, setPdfOriginalName] = useState<string>("");
+
   if (!courseId) {
     return (
       <section className="course-detail-wrapper">
-        <p className="course-form-error">
-          ID du cours manquant dans l’URL.
-        </p>
+        <p className="course-form-error">ID du cours manquant dans l’URL.</p>
       </section>
     );
   }
@@ -44,10 +47,83 @@ const LessonCreatePage: React.FC = () => {
     >
   ) => {
     const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: name === "order" ? Number(value) : value,
-    }));
+
+    setForm((prev) => {
+      if (name === "order") {
+        return { ...prev, order: Number(value) };
+      }
+
+      if (name === "content_type") {
+        const newType = value as ContentType;
+        return {
+          ...prev,
+          content_type: newType,
+          // on peut garder ou reset certains champs si tu veux
+          content_url: newType === "text" ? "" : prev.content_url,
+          content_text: newType === "text" ? prev.content_text : prev.content_text,
+        };
+      }
+
+      return {
+        ...prev,
+        [name]: value,
+      };
+    });
+  };
+
+  const handlePdfFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setPdfUploadError("");
+    setUploadingPdf(true);
+
+    try {
+      const formData = new FormData();
+      // doit être "file" pour matcher : upload_file(file: UploadFile = File(...))
+      formData.append("file", file);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        let message = `Erreur upload PDF (HTTP ${res.status})`;
+        try {
+          const errData = await res.json();
+          if (errData.detail) {
+            message =
+              typeof errData.detail === "string"
+                ? errData.detail
+                : JSON.stringify(errData.detail);
+          }
+        } catch {
+          // on garde le message de base
+        }
+        throw new Error(message);
+      }
+
+      const data: {
+        filename: string;
+        original_name: string;
+        message?: string;
+      } = await res.json();
+
+      // on stocke la clé retournée par l’API dans content_url
+      setForm((prev) => ({
+        ...prev,
+        content_url: data.filename,
+      }));
+
+      setPdfOriginalName(data.original_name || file.name);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Erreur inconnue lors de l’upload du PDF";
+      setPdfUploadError(message);
+    } finally {
+      setUploadingPdf(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -95,7 +171,7 @@ const LessonCreatePage: React.FC = () => {
         throw new Error(message);
       }
 
-      // On pourrait utiliser la leçon renvoyée, mais ici on revient au cours
+      // Retour au cours
       navigate(`/courses/${courseId}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Erreur inconnue";
@@ -208,31 +284,79 @@ const LessonCreatePage: React.FC = () => {
                 </div>
               )}
 
-              {/* URL vers PDF / vidéo / lien */}
+              {/* URL ou upload selon le type */}
               {isUrlContent && (
                 <div className="course-form-group">
-                  <label htmlFor="content_url">
-                    URL du contenu (
-                    {form.content_type === "pdf"
-                      ? "lien vers le PDF"
-                      : form.content_type === "video"
-                      ? "lien vers la vidéo"
-                      : form.content_type === "word"
-                      ? "lien vers le document"
-                      : "lien externe"}
-                    )
-                  </label>
-                  <input
-                    id="content_url"
-                    name="content_url"
-                    value={form.content_url}
-                    onChange={handleChange}
-                    placeholder="https://…"
-                  />
-                  <p className="course-detail-info">
-                    Plus tard, cette URL pourra être une URL signée Azure Blob
-                    générée par le backend.
-                  </p>
+                  {form.content_type === "pdf" ? (
+                    <>
+                      <label htmlFor="pdf-upload">
+                        Fichier PDF (upload vers Azure)
+                      </label>
+
+                      <label
+                        htmlFor="pdf-upload"
+                        className="file-input-wrapper"
+                      >
+                        <span className="file-input-button">
+                          {uploadingPdf
+                            ? "Upload en cours..."
+                            : "Choisir un PDF"}
+                        </span>
+                        <span className="file-input-name">
+                          {pdfOriginalName
+                            ? pdfOriginalName
+                            : "Aucun fichier sélectionné"}
+                        </span>
+                      </label>
+
+                      <input
+                        id="pdf-upload"
+                        type="file"
+                        accept="application/pdf"
+                        onChange={handlePdfFileChange}
+                        className="file-input-hidden"
+                        disabled={uploadingPdf}
+                      />
+
+                      {pdfUploadError && (
+                        <p className="course-form-error">
+                          {pdfUploadError}
+                        </p>
+                      )}
+
+                      {form.content_url && !pdfUploadError && (
+                        <p className="course-detail-info">
+                          Fichier chargé, clé stockée :{" "}
+                          <code>{form.content_url}</code>
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <label htmlFor="content_url">
+                        URL du contenu (
+                        {form.content_type === "video"
+                          ? "lien vers la vidéo"
+                          : form.content_type === "word"
+                          ? "lien vers le document"
+                          : form.content_type === "link"
+                          ? "lien externe"
+                          : "URL du contenu"}
+                        )
+                      </label>
+                      <input
+                        id="content_url"
+                        name="content_url"
+                        value={form.content_url}
+                        onChange={handleChange}
+                        placeholder="https://…"
+                      />
+                      <p className="course-detail-info">
+                        Plus tard, cette URL pourra être une URL signée Azure
+                        Blob générée par le backend.
+                      </p>
+                    </>
+                  )}
                 </div>
               )}
 
