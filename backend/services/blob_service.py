@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timedelta, timezone
-from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions
+from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions, ContentSettings
 
 CONNECTION_STRING = os.getenv("STORAGE_ACCOUNT_CONNECTION_STRING") # A rajouter dans tes outputs Terraform ou .env manuellement pour le dev local
 # En prod (Azure App Service), on utilise souvent l'identité gérée, mais la connection string est plus simple pour ce projet.
@@ -22,9 +22,19 @@ def get_blob_client(filename: str):
     blob_service_client = BlobServiceClient.from_connection_string(conn_str)
     return blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=filename)
 
-def upload_file_to_blob(file_obj, filename: str):
+def upload_file_to_blob(file_obj, filename: str, content_type: str = None):
     blob_client = get_blob_client(filename)
-    blob_client.upload_blob(file_obj, overwrite=True)
+    
+    # Configuration des métadonnées du fichier
+    my_content_settings = None
+    if content_type:
+        my_content_settings = ContentSettings(content_type=content_type)
+
+    blob_client.upload_blob(
+        file_obj, 
+        overwrite=True, 
+        content_settings=my_content_settings # On applique le type ici
+    )
     return filename
 
 def delete_file_from_blob(filename: str):
