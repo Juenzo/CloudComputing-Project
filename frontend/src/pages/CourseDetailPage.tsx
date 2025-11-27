@@ -37,7 +37,6 @@ const CourseDetailPage: React.FC = () => {
       setError("");
 
       try {
-        // On récupère le cours + ses leçons en parallèle
         const [courseRes, lessonsRes] = await Promise.all([
           fetch(`/api/courses/${courseId}`),
           fetch(`/api/courses/${courseId}/lessons`),
@@ -66,81 +65,82 @@ const CourseDetailPage: React.FC = () => {
     fetchData();
   }, [courseId]);
 
-if (loading) {
-  return (
-    <section className="course-detail-wrapper">
-      <div className="course-detail-card">
-        <p className="course-detail-info">Chargement du cours...</p>
-      </div>
-    </section>
-  );
-}
+  // États de chargement / erreur / cours introuvable
+  if (loading) {
+    return (
+      <section className="course-page-wrapper">
+        <div className="course-page-card">
+          <p className="course-page-info">Chargement du cours...</p>
+        </div>
+      </section>
+    );
+  }
 
-if (error) {
-  return (
-    <section className="course-detail-wrapper">
-      <div className="course-detail-card">
-        <p className="course-form-error">
-          Impossible de charger le cours : {error}
-        </p>
-      </div>
-    </section>
-  );
-}
+  if (error) {
+    return (
+      <section className="course-page-wrapper">
+        <div className="course-page-card">
+          <p className="course-form-error">
+            Impossible de charger le cours : {error}
+          </p>
+        </div>
+      </section>
+    );
+  }
 
-if (!course) {
-  return (
-    <section className="course-detail-wrapper">
-      <div className="course-detail-card">
-        <p className="course-detail-info">Cours introuvable.</p>
-      </div>
-    </section>
-  );
-}
+  if (!course) {
+    return (
+      <section className="course-page-wrapper">
+        <div className="course-page-card">
+          <p className="course-page-info">Cours introuvable.</p>
+        </div>
+      </section>
+    );
+  }
 
   const sortedLessons = lessons
     .slice()
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   return (
-    <section className="course-detail-wrapper">
-      <div className="course-detail-topbar">
-        <Link to="/" className="course-detail-back">
+    <section className="course-page-wrapper">
+      <div className="course-page-topbar">
+        <Link to="/" className="course-page-back">
           ← Retour au catalogue
         </Link>
       </div>
 
-      <div className="course-detail-card">
+      <div className="course-page-card">
         {/* HEADER */}
-        <header className="course-detail-header">
-          <div className="course-detail-title-block">
-            <div className="course-detail-title-row">
-              <h1>{course.title}</h1>
+        <header className="course-page-header">
+          <div className="course-page-title-block">
+            <div className="course-page-title-row">
+              <h1 className="course-page-title">{course.title}</h1>
               <Link
                 to={`/courses/${course.id}/lessons/new`}
-                className="course-btn-outline course-detail-add-lesson"
+                className="course-page-btn-outline course-page-add-lesson"
               >
                 + Ajouter une leçon
               </Link>
             </div>
 
             {course.description && (
-              <p className="course-detail-subtitle">
+              <p className="course-page-subtitle">
                 {course.description.length > 140
-                  ? course.description.slice(0, 140) + "..."
+                  ? course.description.slice(0, 140) + "…"
                   : course.description}
               </p>
             )}
           </div>
 
-          <div className="course-detail-tags">
+          <div className="course-page-tags">
             {course.level && (
-              <span className="course-tag course-tag-level">
+              <span className="course-page-tag course-page-tag-level">
                 {course.level}
               </span>
             )}
             {course.category && (
-              <span className="course-tag course-tag-category">
+              <span className="course-page-tag course-page-tag-category">
                 {course.category}
               </span>
             )}
@@ -148,54 +148,58 @@ if (!course) {
         </header>
 
         {/* BODY */}
-        <div className="course-detail-body">
-          {/* Colonne principale */}
-          <div className="course-detail-main">
+        <div className="course-page-body">
+          <div className="course-page-main">
             {course.description && (
-              <section className="course-detail-section">
-                <h2>À propos de ce cours</h2>
-                <p className="course-detail-description">
+              <section className="course-page-section">
+                <h2 className="course-page-section-title">À propos de ce cours</h2>
+                <p className="course-page-description">
                   {course.description}
                 </p>
               </section>
             )}
 
-            <section className="course-detail-section">
-              <h2>Leçons</h2>
+            <section className="course-page-section">
+              <h2 className="course-page-section-title">Leçons</h2>
 
               {sortedLessons.length === 0 && (
-                <p className="course-detail-info">
+                <p className="course-page-info">
                   Aucune leçon définie pour l’instant. Ajoute une première
                   leçon pour ce cours.
                 </p>
               )}
 
               {sortedLessons.length > 0 && (
-                <ol className="course-chapter-list">
+                <ol className="course-page-lesson-list">
                   {sortedLessons.map((lesson, index) => (
-                    <li key={lesson.id} className="course-chapter-item">
-                      <div className="course-chapter-header">
-                        <span className="course-chapter-order">
+                    <li
+                      key={lesson.id}
+                      className="course-page-lesson-item"
+                    >
+                      <div className="course-page-lesson-header">
+                        <span className="course-page-lesson-order">
                           Leçon {lesson.order ?? index + 1}
                         </span>
-                        <h3>{lesson.title}</h3>
-                        <span className="course-tag course-tag-content-type">
+                        <h3 className="course-page-lesson-title">
+                          {lesson.title}
+                        </h3>
+                        <span className="course-page-tag course-page-tag-type">
                           {lesson.content_type}
                         </span>
                       </div>
 
                       {lesson.description && (
-                        <p className="course-chapter-content">
+                        <p className="course-page-lesson-content">
                           {lesson.description.length > 180
-                            ? lesson.description.slice(0, 180) + "..."
+                            ? lesson.description.slice(0, 180) + "…"
                             : lesson.description}
                         </p>
                       )}
 
-                      <div className="course-chapter-actions">
+                      <div className="course-page-lesson-actions">
                         <Link
                           to={`/lessons/${lesson.id}`}
-                          className="course-btn-outline"
+                          className="course-page-btn-outline"
                         >
                           Ouvrir la leçon
                         </Link>
@@ -206,15 +210,15 @@ if (!course) {
               )}
             </section>
 
-            <section className="course-detail-section">
-              <h2>Quiz du cours</h2>
-              <p className="course-detail-info">
+            <section className="course-page-section">
+              <h2 className="course-page-section-title">Quiz du cours</h2>
+              <p className="course-page-info">
                 Teste tes connaissances ou configure le quiz associé à ce cours.
               </p>
-              <div className="course-detail-quiz-actions">
+              <div className="course-page-quiz-actions">
                 <Link
                   to={`/courses/${course.id}/quiz/new`}
-                  className="course-btn-outline"
+                  className="course-page-btn-outline"
                 >
                   Configurer le quiz
                 </Link>
@@ -227,8 +231,6 @@ if (!course) {
               </div>
             </section>
           </div>
-
-          {/* Plus de colonne PDF ici : les contenus sont gérés au niveau des leçons */}
         </div>
       </div>
     </section>
