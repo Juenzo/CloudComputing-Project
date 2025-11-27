@@ -561,3 +561,52 @@ a {
   border: none;
 }
 
+.course-detail-wrapper {
+  padding: 2.5rem 0 3rem;
+}
+
+/* Carte principale de la page "détail / leçon" */
+.course-detail-card {
+  width: 100%;
+  max-width: 820px;
+  margin-top: 0.75rem;
+  border-radius: 18px;
+  padding: 1.8rem 2.1rem;
+  border: 1px solid var(--header-border);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(18px);
+}
+
+/* Variante selon le thème */
+.app.theme-dark .course-detail-card {
+  background: radial-gradient(
+      circle at top left,
+      rgba(148, 163, 184, 0.08),
+      rgba(15, 23, 42, 0.96)
+    );
+}
+
+.app.theme-light .course-detail-card {
+  background: radial-gradient(
+      circle at top left,
+      rgba(191, 219, 254, 0.35),
+      rgba(255, 255, 255, 0.96)
+    );
+}
+
+.course-detail-topbar {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.course-detail-back {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.course-detail-back:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
