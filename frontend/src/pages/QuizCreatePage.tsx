@@ -83,7 +83,21 @@ const QuizCreatePage: React.FC = () => {
     setSaving(true);
 
     try {
-      const payload = { questions };
+      // Adapter le payload au format attendu par l'API backend
+      const payload = {
+        title: "Quiz", // titre requis par QuizCreate
+        description: null,
+        order: 0,
+        course_id: Number(courseId),
+        questions: questions.map((q) => ({
+          text: q.questionText,
+          points: 1,
+          choices: q.answers.map((a) => ({
+            text: a.text,
+            is_correct: a.isCorrect,
+          })),
+        })),
+      };
       const res = await fetch(`/api/courses/${courseId}/quiz`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
