@@ -16,6 +16,7 @@ const CourseListPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
   const [search, setSearch] = useState("");
+  const [lessonCounts, setLessonCounts] = useState<Record<number, number>>({});
 
   useEffect(() => {
     fetch("/api/courses")
@@ -34,6 +35,37 @@ const CourseListPage: React.FC = () => {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  // Fetch lessons for each course to compute counts (lessonCount not provided by API)
+  useEffect(() => {
+    if (!courses.length) return;
+
+    let cancelled = false;
+    const loadCounts = async () => {
+      try {
+        const lessonsArrays = await Promise.all(
+          courses.map((c) =>
+            fetch(`/api/courses/${c.id}/lessons`)
+              .then((res) => (res.ok ? res.json() : Promise.resolve([])))
+              .catch(() => [])
+          )
+        );
+        if (cancelled) return;
+        const counts: Record<number, number> = {};
+        lessonsArrays.forEach((arr, idx) => {
+          const courseId = courses[idx].id;
+          counts[courseId] = Array.isArray(arr) ? arr.length : 0;
+        });
+        setLessonCounts(counts);
+      } catch {
+        // Ignore count errors silently
+      }
+    };
+    loadCounts();
+    return () => {
+      cancelled = true;
+    };
+  }, [courses]);
 
   const filteredCourses = courses.filter((course) =>
     course.title.toLowerCase().includes(search.toLowerCase())
@@ -120,7 +152,7 @@ const CourseListPage: React.FC = () => {
 
                   <div className="catalog-card-bottom">
                     <span className="catalog-lessons">
-                      {(course.lessonCount ?? 0) || 0} leçon(s)
+                      {(lessonCounts[course.id] ?? 0)} leçon(s)
                     </span>
                     <span className="catalog-link">Voir le cours →</span>
                   </div>
