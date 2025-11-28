@@ -77,6 +77,32 @@ const LessonDetailPage: React.FC = () => {
   const isPdf = lesson.content_type === "pdf";
   const isVideo = lesson.content_type === "video";
 
+  // Convert YouTube watch/share URLs to embeddable URL to avoid X-Frame-Options blocks
+  const toEmbeddableUrl = (url?: string | null) => {
+    if (!url) return undefined;
+    try {
+      const u = new URL(url);
+      const host = u.hostname.replace(/^www\./, "").toLowerCase();
+      // Handle youtube.com/watch?v=ID
+      if (host === "youtube.com" || host === "youtube-nocookie.com") {
+        if (u.pathname === "/watch") {
+          const id = u.searchParams.get("v");
+          if (id) return `https://www.youtube.com/embed/${id}`;
+        }
+        // already an embed path
+        if (u.pathname.startsWith("/embed/")) return url;
+      }
+      // Handle youtu.be/ID
+      if (host === "youtu.be") {
+        const id = u.pathname.slice(1);
+        if (id) return `https://www.youtube.com/embed/${id}`;
+      }
+      return url;
+    } catch {
+      return url;
+    }
+  };
+
   return (
     <section className="course-detail-wrapper">
       <div className="course-detail-topbar">
@@ -139,7 +165,7 @@ const LessonDetailPage: React.FC = () => {
                 {isVideo && (
                   <div className="course-pdf-frame-wrapper">
                     <iframe
-                      src={fileUrl}
+                      src={toEmbeddableUrl(fileUrl)}
                       title={`Vidéo de la leçon ${lesson.title}`}
                       className="course-pdf-frame"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
