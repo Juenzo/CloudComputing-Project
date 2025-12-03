@@ -29,6 +29,11 @@ jobs:
 
       - name: Lancement des Tests Backend
         working-directory: ./backend
+        env:
+          sql_server_fqdn: "localhost"
+          sql_database_name: "test_db"
+          DB_USER: "fake_user"
+          DB_PASSWORD: "fake_password"
         run: |
           pytest -v
 
