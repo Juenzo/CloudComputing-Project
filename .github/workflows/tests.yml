@@ -1,16 +1,15 @@
 name: Tests Automatisés (CI)
 
-# Déclenche les tests à chaque push sur la branche main ou lors d'une Pull Request
 on:
+  workflow_dispatch:
   push:
     branches: [ "main", "master" ]
     paths:
-      - 'cloud/**'
+      - '**' 
   pull_request:
     branches: [ "main", "master" ]
 
 jobs:
-  # TEST BACKEND
   test-backend:
     runs-on: ubuntu-latest
     steps:
@@ -23,18 +22,16 @@ jobs:
           python-version: '3.11'
 
       - name: Installation des dépendances Backend
-        working-directory: ./cloud/backend
+        working-directory: ./backend
         run: |
           python -m pip install --upgrade pip
-          # Installe les libs requises + celles de test
           pip install fastapi uvicorn sqlmodel pytest httpx azure-storage-blob python-multipart
 
       - name: Lancement des Tests Backend
-        working-directory: ./cloud/backend
+        working-directory: ./backend
         run: |
           pytest -v
 
-  # JOB 2 : TEST FRONTEND
   test-frontend:
     runs-on: ubuntu-latest
     steps:
@@ -47,11 +44,11 @@ jobs:
           node-version: '18'
 
       - name: Installation des dépendances Frontend
-        working-directory: ./cloud/frontend
+        working-directory: ./frontend
         run: npm ci
 
       - name: Lancement des Tests Frontend
-        working-directory: ./cloud/frontend
+        working-directory: ./frontend
         run: npm test
         env:
           CI: true
