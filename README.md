@@ -35,15 +35,24 @@ Maxi'Learning est une plateforme d’e-learning collaborative pensée pour être
 - Calcul automatique du score et affichage du résultat.
 - Suivi de la progression via stockage des tentatives.
 
-### D. Chatbot d’assistance
-- Basé sur Azure OpenAI Service ou Azure Bot Framework.
-- Répond aux questions, résume un chapitre, propose un plan d’étude, réalisation de QCM.
-
 ### Architecture
 - Terraform : Création automatiquement de toute l’infrastructure sur Azure à partir d’un fichier de configuration (Azure App Service, Azure SQL Database, Azure Blob Storage, Azure OpenAI ...).
 - Backend (Python) : sert d’API REST entre le frontend et les services Azure.
 - Frontend (React) : interface utilisateur
 
+### Tests
+Backend (Pytest) :
+- Validation du flux complet Quiz (création, soumission, score).
+- Test de la Création de Leçon avec simulation de l'envoi de fichiers vers Azure Blob Storage.
+- Vérification de la Suppression en cascade des cours et des ressources Cloud associées.
+Frontend (React) :
+- Test de la page CourseListPage (affichage, filtre et gestion des erreurs).
+- Test de la page CourseCreatePage (soumission du formulaire).
+- Test de la page QuizPlayPage (interaction utilisateur et envoi des réponses).
+- App.tsx : Smoke Test de l'application.
+Automatisation:
+- L'ensemble des tests est lancé automatiquement via GitHub Actions à chaque git push pour garantir la stabilité (CI/CD).
+- Un script local (run_tests.ps1) est disponible pour un retour immédiat en phase de développement.
 
 ## Initalisation 
 
@@ -83,7 +92,7 @@ Your credentials for the SQL Database :
 - DB_USER=sqladmin
 - DB_PASSWORD=Admin123!
 
-Key for the Storage Account, recuperated from the Azure Portal :
+Key for the Storage Account, recuperated from the Azure Portal or can be recuperated thanks to the command "az storage account keys list --resource-group rg-elearning --account-name nom_du_compte --query "[0].value" -o tsv" :
 - STORAGE_ACCOUNT_KEY=ici
 
 Copy and past the output of terraform apply command here :
