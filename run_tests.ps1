@@ -7,6 +7,10 @@ $BackendPath = Join-Path $PSScriptRoot "backend"
 Push-Location $BackendPath
 try {
     $env:PYTHONPATH = $BackendPath
+    $env:sql_server_fqdn = "localhost"
+    $env:sql_database_name = "test_db"
+    $env:DB_USER = "fake_user"
+    $env:DB_PASSWORD = "fake_password"
     python -m pytest tests/ -v
     
     if ($LASTEXITCODE -ne 0) {
