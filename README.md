@@ -60,9 +60,9 @@ Automatisation:
 1. Exécuter les commandes suivantes dans votre terminal
 ```bash
 cd infra
-terraform taint random_string.pg_suffix
 terraform init
 terraform plan
+terraform taint random_string.pg_suffix
 terraform apply
 ```
 
@@ -77,6 +77,7 @@ terraform apply
 
 5. Installer les requirements Python
 ``` bash
+cd backend
 pip install -r requirements.txt
 ```
 

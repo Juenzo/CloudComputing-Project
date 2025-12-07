@@ -118,7 +118,7 @@ resource "azurerm_linux_web_app" "api" {
       python_version = "3.11"
     }
     always_on        = false
-    app_command_line = "python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000"
+    app_command_line = "python3 -m gunicorn backend.main:app -c gunicorn.conf.py"
   }
 
   app_settings = {

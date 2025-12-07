@@ -4,9 +4,6 @@ from contextlib import asynccontextmanager
 # Import de notre nouvelle config database
 from .database import create_db_and_tables
 
-# Import des modèles pour s'assurer qu'ils sont enregistrés avant la création des tables
-from .models import Course, Lesson, QuizQuestion, QuizChoice
-
 # Import des routes
 from .routes import courses, storage, quiz
 
@@ -22,7 +19,7 @@ async def lifespan(app: FastAPI):
 # --- INITIALISATION APP ---
 app = FastAPI(
     title="E-Learning API",
-    version="1.0",
+    version="1.1",
     lifespan=lifespan
 )
 
