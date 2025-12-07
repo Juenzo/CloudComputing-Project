@@ -2,7 +2,7 @@
 # CONFIGURATION
 # =========================
 $StorageAccountName = "storagelearning6285"
-$StorageAccountKey  = "Ora2gyHnJP+yxL5fBfNpMiDrBAasbzBB1K0F80adD4BWGx+Xbs0t87jHegx/93HRQQZ3FYuU0Dan+AStVAMN8Q==" 
+$StorageAccountKey  = "your_key_here"  # Remplacez par votre clé d'accès au compte de stockage
 $FrontendPath = "frontend"
 $BuildDir = "build"
 $ContainerName = "`$web" 
