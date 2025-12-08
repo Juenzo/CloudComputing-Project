@@ -1,5 +1,3 @@
-<div align="center">
-
 # Maxi'Learning — Plateforme d’e-learning (Projet ISEN5 Cloud Computing)
 
 Une plateforme d’apprentissage en ligne simple, modulaire et scalable sur Azure.
@@ -14,7 +12,6 @@ Maxi'Learning est une plateforme d’e-learning collaborative pensée pour être
 - Accessibilité : tout le monde peut créer et partager un cours via un lien.
 - Modularité : un cours est composé de chapitres, de quiz, de PDF et de vidéos.
 - Évolutivité : la solution doit accueillir un grand nombre d’utilisateurs et de ressources grâce à Azure.
-- Interaction : un chatbot d’assistance guidera l’apprenant dans la plateforme.
 
 ## Fonctionnalités
 
@@ -93,10 +90,10 @@ Your credentials for the SQL Database :
 - DB_USER=sqladmin
 - DB_PASSWORD=Admin123!
 
-Key for the Storage Account, recuperated from the Azure Portal or can be recuperated thanks to the command "az storage account keys list --resource-group rg-elearning --account-name nom_du_compte --query "[0].value" -o tsv" :
+Clé pour le Compte de Stockage, récupérée depuis le Portail Azure ou pouvant être récupérée grâce à la commande "az storage account keys list --resource-group rg-elearning --account-name nom_du_compte --query "[0].value" -o tsv" :
 - STORAGE_ACCOUNT_KEY=ici
 
-Copy and past the output of terraform apply command here :
+Copiez-collez ici la sortie de la commande terraform apply :
 - api_hostname = "api-elearning-5510.azurewebsites.net"
 - api_name = "api-elearning-5510"
 - api_url = "https://api-elearning-5510.azurewebsites.net"        
