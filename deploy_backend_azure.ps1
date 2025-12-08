@@ -1,12 +1,37 @@
 # =========================
-# CONFIGURATION
+# CONFIGURATION VIA .env
 # =========================
-$AppServiceName = "api-elearning-6285"
-$ResourceGroup = "rg-elearning"          
-$BackendPath = "backend"  
-$RequirementsFile = "requirements.txt"
-$ZipPath = "deploy.zip"
+function Load-DotEnv {
+    param(
+        [string]$Path = ".env"
+    )
+    $envMap = @{}
+    if (-not (Test-Path $Path)) { return $envMap }
+    Get-Content -Path $Path | ForEach-Object {
+        $line = $_.Trim()
+        if ($line -eq "" -or $line.StartsWith('#')) { return }
+        $idx = $line.IndexOf('=')
+        if ($idx -gt 0) {
+            $key = $line.Substring(0, $idx).Trim()
+            $val = $line.Substring($idx + 1).Trim()
+            # Remove optional quotes (double or single)
+            if (($val.StartsWith('"') -and $val.EndsWith('"')) -or ($val.StartsWith("'") -and $val.EndsWith("'"))) {
+                $val = $val.Trim('"', "'")
+            }
+            $envMap[$key] = $val
+        }
+    }
+    return $envMap
+}
+
 $EnvFile = ".env"
+$cfg = Load-DotEnv -Path $EnvFile
+
+$AppServiceName   = $cfg["APP_SERVICE_NAME"]   ; if (-not $AppServiceName)   { $AppServiceName = "api-elearning-6285" }
+$ResourceGroup    = $cfg["RESOURCE_GROUP"]     ; if (-not $ResourceGroup)    { $ResourceGroup = "rg-elearning" }
+$BackendPath      = $cfg["BACKEND_PATH"]       ; if (-not $BackendPath)      { $BackendPath = "backend" }
+$RequirementsFile = $cfg["REQUIREMENTS_FILE"]  ; if (-not $RequirementsFile) { $RequirementsFile = "requirements.txt" }
+$ZipPath          = $cfg["ZIP_PATH"]           ; if (-not $ZipPath)          { $ZipPath = "deploy.zip" }
 
 # =========================
 # 1️⃣ Créer le ZIP

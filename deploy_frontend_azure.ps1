@@ -1,11 +1,36 @@
 # =========================
-# CONFIGURATION
+# CONFIGURATION VIA .env
 # =========================
-$StorageAccountName = "storagelearning6285"
-$StorageAccountKey  = "your_key_here"  # Remplacez par votre clé d'accès au compte de stockage
-$FrontendPath = "frontend"
-$BuildDir = "build"
-$ContainerName = "`$web" 
+function Load-DotEnv {
+    param(
+        [string]$Path = ".env"
+    )
+    $envMap = @{}
+    if (-not (Test-Path $Path)) { return $envMap }
+    Get-Content -Path $Path | ForEach-Object {
+        $line = $_.Trim()
+        if ($line -eq "" -or $line.StartsWith('#')) { return }
+        $idx = $line.IndexOf('=')
+        if ($idx -gt 0) {
+            $key = $line.Substring(0, $idx).Trim()
+            $val = $line.Substring($idx + 1).Trim()
+            if (($val.StartsWith('"') -and $val.EndsWith('"')) -or ($val.StartsWith("'") -and $val.EndsWith("'"))) {
+                $val = $val.Trim('"', "'")
+            }
+            $envMap[$key] = $val
+        }
+    }
+    return $envMap
+}
+
+$EnvFile = ".env"
+$cfg = Load-DotEnv -Path $EnvFile
+
+$StorageAccountName = $cfg["STORAGE_ACCOUNT_NAME"] ; if (-not $StorageAccountName) { $StorageAccountName = "storagelearning6285" }
+$StorageAccountKey  = $cfg["STORAGE_ACCOUNT_KEY"]  ; if (-not $StorageAccountKey)  { $StorageAccountKey  = "your_key_here" }
+$FrontendPath       = $cfg["FRONTEND_PATH"]       ; if (-not $FrontendPath)       { $FrontendPath = "frontend" }
+$BuildDir           = $cfg["BUILD_DIR"]           ; if (-not $BuildDir)           { $BuildDir = "build" }
+$ContainerName      = $cfg["CONTAINER_NAME"]      ; if (-not $ContainerName)      { $ContainerName = "`$web" }
 # =========================
 
 # 1️⃣ Aller dans le dossier frontend, installer et builder l'application

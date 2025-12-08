@@ -58,15 +58,6 @@ resource "azurerm_storage_container" "content" {
   container_access_type = "private"
 }
 
-# Upload de ton PDF evaluation.pdf
-resource "azurerm_storage_blob" "evaluation_pdf" {
-  name                   = "pdf/evaluation.pdf"
-  storage_account_name   = azurerm_storage_account.sa.name
-  storage_container_name = azurerm_storage_container.content.name
-  type                   = "Block"
-  source                 = "${path.module}/files/pdf/evaluation.pdf"
-}
-
 ########################
 # PostgreSQL Flexible Server
 ########################

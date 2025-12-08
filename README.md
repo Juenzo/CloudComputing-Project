@@ -76,13 +76,11 @@ terraform apply
 4. Connectez-vous à Azure Portal pour récupérer une clé d'accès au blob de stockage précedemment crée, puis ajouter la au fichier .env
 
 5. Installer le backend
-Mettez à jour les informations de config au début du code et executer :
 ``` bash
 deploy_backend_azure.ps1
 ```
 
 5. Installer le frontend
-Mettez à jour les informations de config au début du code et executer :
 ``` bash
 deploy_frontend_azure.ps1
 ```
