@@ -56,8 +56,14 @@ Automatisation:
 
 ## Initalisation 
 
-### Lancer l'infrastructure sur Azure
-1. Exécuter les commandes suivantes dans votre terminal
+### Déployer l'infrastructure sur Azure
+
+0. Clonner la branch `AzureProduction` du dépot :
+```bash
+git clone -b AzureProduction --single-branch https://github.com/Juenzo/CloudComputing-Project
+```
+
+1. Exécuter les commandes suivantes dans votre terminal :
 ```bash
 cd infra
 terraform init
@@ -65,23 +71,51 @@ terraform plan
 terraform apply
 ```
 
-2. Copier les variables de output du terraform apply dans le .env (voir .env.template)
+2. Copier les variables d'output du `terraform apply` dans le fichier .env (voir .env.template)
 
-3. Exécuter le script suivant pour ajouter votre IP au firewall, et ainsi pouvoir accéder à la base de données (ne pas utiliser le réseau ISEN)
+3. Exécuter le script suivant pour ajouter votre IP au firewall Azure, et ainsi pouvoir accéder à la base de données (ne pas utiliser sur le réseau ISEN)
 ```bash
 ./add_ip_to_azure.ps1
 ```
 
-4. Connectez-vous à Azure Portal pour récupérer une clé d'accès au blob de stockage précedemment crée, puis ajouter la au fichier .env (Compte de Stockage > Sécurité + Reseau > Clés d'accès)
+4. Connectez-vous directement à Azure Portal pour récupérer une clé d'accès au blob de stockage précedemment crée, puis ajouter la au fichier .env (Compte de Stockage > Sécurité + Reseau > Clés d'accès)
 
-5. Modifier dans le fichier frontend/.env.production la variable REACT_APP_API_BASE_URL par votre nouvelle variable api_url (trouvable dans les outputs de terraform)
+5. Modifier dans le fichier frontend/.env.production la variable `REACT_APP_API_BASE_URL` par votre nouvelle variable `api_url` (trouvable dans les outputs de terraform)
 
-6. Installer le backend (sujet à problème)
+6. Installer et déployer ensuite le backend sur Azure (sujet à problème)
 ``` bash
 .\deploy_backend_azure.ps1
 ```
 
-7. Installer le frontend (fonctionnel)
+7. Installer et déployer par la suite le frontend (entierement fonctionnel)
 ``` bash
 .\deploy_frontend_azure.ps1
+```
+
+### Lancer l'infrastructure en local avec la base de donnée déployée sur Azure
+
+0. Clonner la branch `main` du dépot :
+```bash
+git clone https://github.com/Juenzo/CloudComputing-Project
+```
+
+1. Exécuter les commandes suivantes dans votre terminal pour lancer la création de l'architecture et de la base de donnée sur Azure :
+```bash
+cd infra
+terraform init
+terraform plan
+terraform apply
+```
+
+2. Exécuter ensuite les commandes suivantes pour lancer le backend sur votre ordinateur :
+```bash
+pip install requirements.txt
+uvicorn backend.main:app --reload
+```
+
+3. Dans une deuxième terminal lancer le frontend en local :
+```bash
+cd frontend
+npm install
+npm start
 ```
