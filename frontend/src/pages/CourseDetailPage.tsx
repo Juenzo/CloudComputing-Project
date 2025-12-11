@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { apiFetch } from "../config/api";
 import "./css/CourseDetailPage.css";
 
 type ContentType = "video" | "pdf" | "word" | "text" | "link";
@@ -38,8 +39,8 @@ const CourseDetailPage: React.FC = () => {
 
       try {
         const [courseRes, lessonsRes] = await Promise.all([
-          fetch(`/api/courses/${courseId}`),
-          fetch(`/api/courses/${courseId}/lessons`),
+          apiFetch(`/api/courses/${courseId}`),
+          apiFetch(`/api/courses/${courseId}/lessons`),
         ]);
 
         if (!courseRes.ok) {

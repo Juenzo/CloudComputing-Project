@@ -1,6 +1,8 @@
+<div align="center">
+
 # Maxi'Learning — Plateforme d’e-learning (Projet ISEN5 Cloud Computing)
 
-Une plateforme d’apprentissage en ligne simple, modulaire et scalable sur Azure.
+Une plateforme d’apprentissage en ligne simple et modulaire !
 
 </div>
 
@@ -53,53 +55,66 @@ Automatisation:
 
 ## Initalisation 
 
-### Lancer l'infrastructure sur Azure
-1. Exécuter les commandes suivantes dans votre terminal
+### Lancer l'infrastructure en local avec la base de donnée déployée sur Azure
+
+0. Clonner la branch `main` du dépot :
+```bash
+git clone https://github.com/Juenzo/CloudComputing-Project
+```
+
+1. Exécuter les commandes suivantes dans votre terminal pour lancer la création de l'architecture et de la base de donnée sur Azure :
 ```bash
 cd infra
 terraform init
 terraform plan
-terraform taint random_string.pg_suffix
 terraform apply
 ```
 
-2. Copier les variables de output du terraform apply dans le .env
+2. Exécuter ensuite les commandes suivantes pour lancer le backend sur votre ordinateur :
+```bash
+pip install requirements.txt
+uvicorn backend.main:app --reload
+```
 
-3. Exécuter le script suivant pour ajouter votre IP au firewall, et ainsi pouvoir accéder à la base de données (ne pas utiliser le réseau ISEN)
+3. Dans une deuxième terminal lancer le frontend en local :
+```bash
+cd frontend
+npm install
+npm start
+```
+
+### Déployer l'infrastructure sur Azure
+
+0. Clonner la branch `AzureProduction` du dépot :
+```bash
+git clone -b AzureProduction --single-branch https://github.com/Juenzo/CloudComputing-Project
+```
+
+1. Exécuter les commandes suivantes dans votre terminal :
+```bash
+cd infra
+terraform init
+terraform plan
+terraform apply
+```
+
+2. Copier les variables d'output du `terraform apply` dans le fichier .env (voir .env.template)
+
+3. Exécuter le script suivant pour ajouter votre IP au firewall Azure, et ainsi pouvoir accéder à la base de données (ne pas utiliser sur le réseau ISEN)
 ```bash
 ./add_ip_to_azure.ps1
 ```
 
-4. Connectez-vous à Azure Portal pour récupérer une clé d'accès au blob de stockage précedemment crée, puis ajouter la au fichier .env
+4. Connectez-vous directement à Azure Portal pour récupérer une clé d'accès au blob de stockage précedemment crée, puis ajouter la au fichier .env (Compte de Stockage > Sécurité + Reseau > Clés d'accès)
 
-5. Installer les requirements Python
+5. Modifier dans le fichier frontend/.env.production la variable `REACT_APP_API_BASE_URL` par votre nouvelle variable `api_url` (trouvable dans les outputs de terraform)
+
+6. Installer et déployer ensuite le backend sur Azure (sujet à problème)
 ``` bash
-cd backend
-pip install -r requirements.txt
+.\deploy_backend_azure.ps1
 ```
 
-6. Lancer le backend en local depuis un terminal dans la racine du projet
-```bash
-uvicorn backend.main:app --reload
+7. Installer et déployer par la suite le frontend (entierement fonctionnel)
+``` bash
+.\deploy_frontend_azure.ps1
 ```
-
-7. Les routes de l'API backend sont accessible depuis l'url : http://127.0.0.1:8000/docs#/
-
-### Exemple de .env
-Your credentials for the SQL Database :
-- DB_USER=sqladmin
-- DB_PASSWORD=Admin123!
-
-Clé pour le Compte de Stockage, récupérée depuis le Portail Azure ou pouvant être récupérée grâce à la commande "az storage account keys list --resource-group rg-elearning --account-name nom_du_compte --query "[0].value" -o tsv" :
-- STORAGE_ACCOUNT_KEY=ici
-
-Copiez-collez ici la sortie de la commande terraform apply :
-- api_hostname = "api-elearning-5510.azurewebsites.net"
-- api_name = "api-elearning-5510"
-- api_url = "https://api-elearning-5510.azurewebsites.net"        
-- content_container_name = "content"
-- evaluation_pdf_url = "https://storagelearning5510.blob.core.windows.net/content/pdf/evaluation.pdf"
-- resource_group_name = "rg-elearning"
-- sql_database_name = "elearning_bdd"
-- sql_server_fqdn = "sql-srv-rg-elearning-5510.database.windows.net"
-- storage_account_name = "storagelearning5510"

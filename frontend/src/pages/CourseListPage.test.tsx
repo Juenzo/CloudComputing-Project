@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import CourseListPage from './CourseListPage';
+import { API_BASE_URL } from '../config/env';
 
 
 // On simule fetch globalement avant les tests
@@ -20,13 +21,13 @@ describe('CourseListPage', () => {
     ];
 
     (global.fetch as jest.Mock).mockImplementation((url) => {
-      if (url === '/api/courses') {
+      if (url === `${API_BASE_URL}/api/courses`) {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve(fakeCourses),
         });
       }
-      if (url.includes('/lessons')) {
+      if (typeof url === 'string' && url.includes('/lessons')) {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve([]),

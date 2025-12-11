@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { apiFetch } from "../config/api";
 import "./css/QuizPlayPage.css";
 
 interface QuizAnswer {
@@ -37,7 +38,7 @@ const QuizPlayPage: React.FC = () => {
     setLoading(true);
     setError("");
 
-    fetch(`/api/courses/${courseId}/quiz`)
+    apiFetch(`/api/courses/${courseId}/quiz`)
       .then((res) => {
         if (!res.ok) {
           throw new Error("Erreur HTTP " + res.status);
@@ -52,7 +53,7 @@ const QuizPlayPage: React.FC = () => {
         const firstQuizId = quizList[0].id;
         setQuizId(firstQuizId);
 
-        return fetch(`/api/quiz/${firstQuizId}`)
+        return apiFetch(`/api/quiz/${firstQuizId}`)
           .then((res) => {
             if (!res.ok) {
               throw new Error("Erreur HTTP " + res.status);
@@ -104,7 +105,7 @@ const QuizPlayPage: React.FC = () => {
         })
       );
 
-      const res = await fetch(`/api/quiz/${quizId}/submit`, {
+      const res = await apiFetch(`/api/quiz/${quizId}/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

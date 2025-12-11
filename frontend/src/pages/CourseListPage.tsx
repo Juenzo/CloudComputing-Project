@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { apiFetch } from "../config/api";
 import "./CourseListPage.css";
 
 export type CourseSummary = {
@@ -19,7 +20,7 @@ const CourseListPage: React.FC = () => {
   const [lessonCounts, setLessonCounts] = useState<Record<number, number>>({});
 
   useEffect(() => {
-    fetch("/api/courses")
+    apiFetch("/api/courses")
       .then((res) => {
         if (!res.ok) {
           throw new Error("Erreur HTTP " + res.status);
@@ -45,7 +46,7 @@ const CourseListPage: React.FC = () => {
       try {
         const lessonsArrays = await Promise.all(
           courses.map((c) =>
-            fetch(`/api/courses/${c.id}/lessons`)
+            apiFetch(`/api/courses/${c.id}/lessons`)
               .then((res) => (res.ok ? res.json() : Promise.resolve([])))
               .catch(() => [])
           )

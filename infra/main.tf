@@ -44,6 +44,10 @@ resource "azurerm_storage_account" "sa" {
   account_tier             = "Standard"
   account_replication_type = "LRS"
   min_tls_version          = "TLS1_2"
+  static_website {
+    index_document     = "index.html"
+    error_404_document = "index.html" # Important pour le routing de React Router DOM (pages dynamiques)
+  }
 }
 
 resource "azurerm_storage_container" "data" {
@@ -56,6 +60,12 @@ resource "azurerm_storage_container" "content" {
   name                  = "content"
   storage_account_name  = azurerm_storage_account.sa.name
   container_access_type = "private"
+}
+
+resource "azurerm_storage_container" "web" {
+  name                  = "$web"
+  storage_account_name  = azurerm_storage_account.sa.name
+  container_access_type = "blob"
 }
 
 resource "azurerm_storage_blob" "evaluation_pdf" {
@@ -118,7 +128,7 @@ resource "azurerm_linux_web_app" "api" {
       python_version = "3.11"
     }
     always_on        = false
-    app_command_line = "python3 -m gunicorn backend.main:app -c gunicorn.conf.py"
+    app_command_line = "python3 -m gunicorn backend.main:app -c gunicorn_conf.py"
   }
 
   app_settings = {
