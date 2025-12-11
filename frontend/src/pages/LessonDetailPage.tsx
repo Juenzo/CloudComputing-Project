@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { apiFetch } from "../config/api";
 
 type ContentType = "video" | "pdf" | "word" | "text" | "link";
 
@@ -29,7 +30,7 @@ const LessonDetailPage: React.FC = () => {
       setError("");
 
       try {
-        const res = await fetch(`/api/lessons/${lessonId}`);
+        const res = await apiFetch(`/api/lessons/${lessonId}`);
         if (!res.ok) {
           throw new Error("Erreur HTTP " + res.status);
         }

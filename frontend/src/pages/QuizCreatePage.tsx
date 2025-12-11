@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { apiFetch } from "../config/api";
 
 interface AnswerForm {
   text: string;
@@ -41,7 +42,7 @@ const QuizCreatePage: React.FC = () => {
         setError("");
         setSuccess("");
         // 1) Cherche s'il existe au moins un quiz pour ce cours
-        const listRes = await fetch(`/api/courses/${courseId}/quiz`);
+        const listRes = await apiFetch(`/api/courses/${courseId}/quiz`);
         if (!listRes.ok) throw new Error(`Erreur HTTP ${listRes.status}`);
         const quizList: Array<{ id: number; title: string }> = await listRes.json();
         if (!quizList || quizList.length === 0) {
@@ -53,7 +54,7 @@ const QuizCreatePage: React.FC = () => {
         setExistingQuizId(firstId);
 
         // 2) Charge le détail complet (incluant is_correct) pour l'éditeur
-        const detailRes = await fetch(`/api/quiz/${firstId}/full`);
+        const detailRes = await apiFetch(`/api/quiz/${firstId}/full`);
         if (!detailRes.ok) throw new Error(`Erreur HTTP ${detailRes.status}`);
         const detail: {
           id: number;
@@ -152,7 +153,7 @@ const QuizCreatePage: React.FC = () => {
         ? `/api/courses/${courseId}/quiz`
         : `/api/courses/${courseId}/quiz`;
       const method = existingQuizId ? "PUT" : "POST";
-      const res = await fetch(endpoint, {
+      const res = await apiFetch(endpoint, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

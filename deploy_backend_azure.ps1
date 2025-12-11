@@ -27,45 +27,39 @@ function Load-DotEnv {
 $EnvFile = ".env"
 $cfg = Load-DotEnv -Path $EnvFile
 
-$AppServiceName   = $cfg["APP_SERVICE_NAME"]   ; if (-not $AppServiceName)   { $AppServiceName = "api-elearning-6285" }
-$ResourceGroup    = $cfg["RESOURCE_GROUP"]     ; if (-not $ResourceGroup)    { $ResourceGroup = "rg-elearning" }
-$BackendPath      = $cfg["BACKEND_PATH"]       ; if (-not $BackendPath)      { $BackendPath = "backend" }
-$RequirementsFile = $cfg["REQUIREMENTS_FILE"]  ; if (-not $RequirementsFile) { $RequirementsFile = "requirements.txt" }
-$ZipPath          = $cfg["ZIP_PATH"]           ; if (-not $ZipPath)          { $ZipPath = "deploy.zip" }
+$AppServiceName   = $cfg["api_name"]
+$ResourceGroup    = $cfg["resource_group_name"]
+$BackendPath = "backend"
+$RequirementsFile = "requirements.txt"
+$ZipPath = "deploy.zip"
 
 # =========================
 # 1️⃣ Créer le ZIP
 # =========================
 Write-Host "Création du ZIP pour déploiement..."
 
-if (Test-Path $ZipPath) {
-    Remove-Item $ZipPath
-}
+# Utiliser un dossier de staging pour contrôler le contenu du ZIP
+$StagingDir = Join-Path $PWD "deploy_staging"
+if (Test-Path $StagingDir) { Remove-Item -Recurse -Force $StagingDir }
+New-Item -ItemType Directory -Path $StagingDir | Out-Null
 
-Add-Type -AssemblyName 'System.IO.Compression.FileSystem'
+# Copier le dossier backend (non aplati) dans le staging
+Copy-Item -Path $BackendPath -Destination $StagingDir -Recurse -Force
 
-# Crée un ZIP vide
-$zip = [System.IO.Compression.ZipFile]::Open($ZipPath, [System.IO.Compression.ZipArchiveMode]::Create)
+# Copier requirements.txt et .env à la racine du staging
+if (Test-Path $RequirementsFile) { Copy-Item -Path $RequirementsFile -Destination (Join-Path $StagingDir (Split-Path $RequirementsFile -Leaf)) -Force }
+if (Test-Path $EnvFile) { Copy-Item -Path $EnvFile -Destination (Join-Path $StagingDir (Split-Path $EnvFile -Leaf)) -Force }
 
-# Ajouter tout le contenu du dossier backend
-Get-ChildItem -Path $BackendPath -Recurse | ForEach-Object {
-    if (-not $_.PSIsContainer) {
-        $relativePath = $_.FullName.Substring((Resolve-Path $BackendPath).Path.Length + 1)
-        $entryName = $relativePath.Replace('\', '/')
-        
-        [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $_.FullName, $entryName) | Out-Null
-    }
-}
+# Copier la configuration gunicorn à la racine pour que Oryx la trouve par chemin relatif
+$GunicornConfSrc = Join-Path $BackendPath "gunicorn_conf.py"
+if (Test-Path $GunicornConfSrc) { Copy-Item -Path $GunicornConfSrc -Destination (Join-Path $StagingDir "gunicorn_conf.py") -Force }
 
-# Ajouter requirements.txt et .env à la racine du ZIP
-if (Test-Path $RequirementsFile) {
-    [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $RequirementsFile, $RequirementsFile) | Out-Null
-}
-if (Test-Path $EnvFile) {
-    [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $EnvFile, $EnvFile) | Out-Null
-}
+# Créer le ZIP depuis le staging (racine propre)
+if (Test-Path $ZipPath) { Remove-Item -Force $ZipPath }
+Compress-Archive -Path (Join-Path $StagingDir '*') -DestinationPath $ZipPath -Force
 
-$zip.Dispose()
+# Nettoyer le staging
+Remove-Item -Recurse -Force $StagingDir
 Write-Host "ZIP créé : $ZipPath"
 
 # =========================
@@ -78,9 +72,25 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # =========================
-# 3️⃣ Déployer le ZIP sur l'App Service
+# 3️⃣ Configurer le App Service
+# =========================
+Write-Host "Configuration de l'App Service..."
+az webapp config appsettings set `
+    --resource-group $ResourceGroup `
+    --name $AppServiceName `
+    --settings SCM_POST_DEPLOYMENT_ACTIONS_DIR=/opt/startup
+
+# Configurer la commande de démarrage
+az webapp config set `
+    --resource-group $ResourceGroup `
+    --name $AppServiceName `
+    --startup-file "python3 -m gunicorn backend.main:app -c gunicorn_conf.py"
+
+# =========================
+# 4️⃣ Déployer le ZIP sur l'App Service
 # =========================
 Write-Host "Déploiement sur Azure App Service..."
+Write-Host "NB : le déploiement peut prendre quelques minutes..."
 az webapp deploy --resource-group $ResourceGroup --name $AppServiceName --src-path $ZipPath --type zip
 
 if ($LASTEXITCODE -eq 0) {

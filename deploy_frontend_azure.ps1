@@ -26,11 +26,11 @@ function Load-DotEnv {
 $EnvFile = ".env"
 $cfg = Load-DotEnv -Path $EnvFile
 
-$StorageAccountName = $cfg["STORAGE_ACCOUNT_NAME"] ; if (-not $StorageAccountName) { $StorageAccountName = "storagelearning6285" }
-$StorageAccountKey  = $cfg["STORAGE_ACCOUNT_KEY"]  ; if (-not $StorageAccountKey)  { $StorageAccountKey  = "your_key_here" }
-$FrontendPath       = $cfg["FRONTEND_PATH"]       ; if (-not $FrontendPath)       { $FrontendPath = "frontend" }
-$BuildDir           = $cfg["BUILD_DIR"]           ; if (-not $BuildDir)           { $BuildDir = "build" }
-$ContainerName      = $cfg["CONTAINER_NAME"]      ; if (-not $ContainerName)      { $ContainerName = "`$web" }
+$StorageAccountName = $cfg["storage_account_name"]
+$StorageAccountKey  = $cfg["STORAGE_ACCOUNT_KEY"]  ; if (-not $StorageAccountKey)  { Write-Host "❌ Erreur: La clé du compte de stockage n'est pas définie dans .env" -ForegroundColor Red; exit 1 }
+$FrontendPath = "frontend"
+$BuildDir = "build"
+$ContainerName = "`$web"
 # =========================
 
 # 1️⃣ Aller dans le dossier frontend, installer et builder l'application

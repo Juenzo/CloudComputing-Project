@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiFetch } from "../config/api";
 
 // Types locaux pour éviter les erreurs de compilation
 type CourseLevel = "Beginner" | "Intermediate" | "Advanced";
@@ -62,7 +63,7 @@ const CourseCreatePage: React.FC = () => {
         slug: form.title.toLowerCase().trim().replace(/\s+/g, "-"),
       };
 
-      const res = await fetch("/api/courses", {
+      const res = await apiFetch("/api/courses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

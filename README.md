@@ -62,45 +62,41 @@ Automatisation:
 cd infra
 terraform init
 terraform plan
-terraform taint random_string.pg_suffix
 terraform apply
 ```
 
-2. Copier les variables de output du terraform apply dans le .env
+2. Copier les variables de output du terraform apply dans le .env (voir .env.template)
 
 3. Exécuter le script suivant pour ajouter votre IP au firewall, et ainsi pouvoir accéder à la base de données (ne pas utiliser le réseau ISEN)
 ```bash
 ./add_ip_to_azure.ps1
 ```
 
-4. Connectez-vous à Azure Portal pour récupérer une clé d'accès au blob de stockage précedemment crée, puis ajouter la au fichier .env
+4. Connectez-vous à Azure Portal pour récupérer une clé d'accès au blob de stockage précedemment crée, puis ajouter la au fichier .env (Compte de Stockage > Sécurité + Reseau > Clés d'accès)
 
-5. Installer le backend
+5. Modifier dans le fichier frontend/.env.production la variable REACT_APP_API_BASE_URL par votre nouvelle variable api_url (trouvable dans les outputs de terraform)
+
+6. Installer le backend (sujet à problème)
 ``` bash
-deploy_backend_azure.ps1
+.\deploy_backend_azure.ps1
 ```
 
-5. Installer le frontend
+7. Installer le frontend (fonctionnel)
 ``` bash
-deploy_frontend_azure.ps1
+.\deploy_frontend_azure.ps1
 ```
 
+### Lancer l'infrastructure en local
 
-### Exemple de .env
-Your credentials for the SQL Database :
-- DB_USER=sqladmin
-- DB_PASSWORD=Admin123!
+1. Lancer le backend
+``` bash
+pip install requirements.txt
+uvicorn backend.main:app --reload
+```
 
-Key for the Storage Account, recuperated from the Azure Portal or can be recuperated thanks to the command "az storage account keys list --resource-group rg-elearning --account-name nom_du_compte --query "[0].value" -o tsv" :
-- STORAGE_ACCOUNT_KEY=ici
-
-Copy and past the output of terraform apply command here :
-- api_hostname = "api-elearning-5510.azurewebsites.net"
-- api_name = "api-elearning-5510"
-- api_url = "https://api-elearning-5510.azurewebsites.net"        
-- content_container_name = "content"
-- evaluation_pdf_url = "https://storagelearning5510.blob.core.windows.net/content/pdf/evaluation.pdf"
-- resource_group_name = "rg-elearning"
-- sql_database_name = "elearning_bdd"
-- sql_server_fqdn = "sql-srv-rg-elearning-5510.database.windows.net"
-- storage_account_name = "storagelearning5510"
+2. Lancer le frontend
+``` bash
+cd frontend
+npm install
+npm start
+```

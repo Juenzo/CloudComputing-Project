@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import CourseCreatePage from './CourseCreatePage';
+import { API_BASE_URL } from '../config/env';
 
 const mockedNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
@@ -37,10 +38,10 @@ describe('CourseCreatePage', () => {
     fireEvent.click(button);
 
     await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith('/api/courses', expect.objectContaining({
-            method: 'POST',
-            body: expect.stringContaining('Nouveau Cours')
-        }));
+      expect(global.fetch).toHaveBeenCalledWith(`${API_BASE_URL}/api/courses`, expect.objectContaining({
+        method: 'POST',
+        body: expect.stringContaining('Nouveau Cours')
+      }));
     });
 
     await waitFor(() => {

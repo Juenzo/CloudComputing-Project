@@ -1,6 +1,7 @@
 // src/pages/LessonCreatePage.tsx
 import React, { useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
+import { apiFetch } from "../config/api";
 import "./css/LessonCreatePage.css";
 
 type ContentType = "video" | "pdf" | "word" | "text" | "link";
@@ -89,7 +90,7 @@ const LessonCreatePage: React.FC = () => {
         if (form.content_url) fd.append("content_url", form.content_url);
       }
 
-      const res = await fetch("/api/lessons", {
+      const res = await apiFetch("/api/lessons", {
         method: "POST",
         body: fd,
       });
