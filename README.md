@@ -85,18 +85,3 @@ terraform apply
 ``` bash
 .\deploy_frontend_azure.ps1
 ```
-
-### Lancer l'infrastructure en local
-
-1. Lancer le backend
-``` bash
-pip install requirements.txt
-uvicorn backend.main:app --reload
-```
-
-2. Lancer le frontend
-``` bash
-cd frontend
-npm install
-npm start
-```
