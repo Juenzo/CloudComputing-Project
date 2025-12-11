@@ -2,13 +2,13 @@
 
 # Maxi'Learning — Plateforme d’e-learning (Projet ISEN5 Cloud Computing)
 
-Une plateforme d’apprentissage en ligne simple, modulaire et scalable sur Azure.
+Une plateforme d’apprentissage en ligne simple et modulaire !
 
 </div>
 
 
 ## Aperçu
-Maxi'Learning est une plateforme d’e-learning collaborative pensée pour être simple à utiliser, ouverte et hébergée sur Microsoft Azure. Elle permet à tout utilisateur de créer, publier et partager facilement des cours en ligne, sans compétences techniques particulières.
+Maxi'Learning est une plateforme d’e-learning collaborative pensée pour être simple à utiliser, ouverte et hébergée directement sur Microsoft Azure. Elle permet à tout utilisateur de créer, publier et partager facilement des cours en ligne, sans compétences techniques particulières.
 
 ## Objectifs
 - Accessibilité : tout le monde peut créer et partager un cours via un lien.

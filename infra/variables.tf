@@ -13,17 +13,24 @@ variable "location" {
 variable "storage_account_name" {
   type        = string
   description = "Nom du storage account (unique, lowercase)"
-  default     = "elearningstorage1234"
+  default     = "storagelearning"
 }
 
-variable "postgres_admin_login" {
+variable "bdd_admin_login" {
   type        = string
-  description = "Login admin PostgreSQL"
-  default     = "pgadmin"
+  description = "Login admin de la bdd SQL"
+  default     = "sqladmin"
 }
 
-variable "postgres_admin_password" {
+variable "bdd_admin_password" {
   type        = string
-  description = "Mot de passe admin PostgreSQL"
+  description = "Mot de passe admin de la bdd SQL"
   sensitive   = true
+  default     = "Admin123!"
+}
+
+variable "app_service_name" {
+  type        = string
+  description = "Nom de l'App Service API"
+  default     = "api-elearning"
 }
