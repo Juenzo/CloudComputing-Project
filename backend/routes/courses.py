@@ -27,13 +27,11 @@ def create_slug(title: str) -> str:
 
 @router.get("/courses", response_model=List[CourseRead])
 def list_courses(session: Session = Depends(get_session)):
-    """Liste tous les cours disponibles"""
     courses = session.exec(select(Course)).all()
     return courses
 
 @router.post("/courses", response_model=CourseRead)
 def create_course(course: CourseCreate, session: Session = Depends(get_session)):
-    """Crée un nouveau cours (juste les infos, pas de fichier ici)"""
     # Génération du slug si non fourni
     if not course.slug:
         course.slug = create_slug(course.title)
@@ -51,7 +49,6 @@ def create_course(course: CourseCreate, session: Session = Depends(get_session))
 
 @router.get("/courses/{slug_or_id}", response_model=CourseRead)
 def get_course(slug_or_id: str, session: Session = Depends(get_session)):
-    """Récupère un cours par son ID ou son SLUG"""
     if slug_or_id.isdigit():
         course = session.get(Course, int(slug_or_id))
     else:
@@ -63,7 +60,6 @@ def get_course(slug_or_id: str, session: Session = Depends(get_session)):
 
 @router.delete("/courses/{course_id}")
 def delete_course(course_id: int, session: Session = Depends(get_session)):
-    """Supprime un cours et ses leçons (Nettoyage des blobs géré en cascade si besoin)"""
     course = session.get(Course, course_id)
     if not course:
         raise HTTPException(status_code=404, detail="Cours introuvable")
@@ -82,7 +78,6 @@ def delete_course(course_id: int, session: Session = Depends(get_session)):
 
 @router.get("/courses/{course_id}/lessons", response_model=List[LessonRead])
 def list_lessons_for_course(course_id: int, session: Session = Depends(get_session)):
-    """Liste les leçons d'un cours, triées par ordre"""
     # Vérif si le cours existe
     course = session.get(Course, course_id)
     if not course:
@@ -120,31 +115,29 @@ def create_lesson(
     # Gestion upload fichier si présent
     if file:
         try:
-            print(f"Fichier reçu: {file.filename}") # DEBUG
+            print(f"Fichier reçu: {file.filename}")
             ext = file.filename.split(".")[-1].lower() if "." in file.filename else "bin"
             unique_filename = f"{uuid.uuid4()}.{ext}"
 
             # Détermination du Content-Type pour Azure
-            mime_type = file.content_type # FastAPI nous donne souvent le bon type
+            mime_type = file.content_type
             
-            # Forçage manuel si besoin pour être sûr
             if ext == "pdf":
                 mime_type = "application/pdf"
             elif ext in ["mp4", "mov", "avi"]:
-                mime_type = "video/mp4" # ou adapté selon l'extension
+                mime_type = "video/mp4"
             
-            # 1. Lecture du fichier
+            # Lecture du fichier
             print("Lecture du fichier en cours...") 
             file_content = file.file.read()
             print(f"Fichier lu ({len(file_content)} octets). Envoi vers Azure avec type {mime_type}...")
 
-            # 2. Upload AVEC le content_type
+            # Upload AVEC le content_type
             upload_file_to_blob(file_content, unique_filename, content_type=mime_type)
             print("Upload Azure RÉUSSI !")
 
             final_content_url = unique_filename
 
-            # ... (la suite pour final_content_type reste inchangée)
             if ext == "pdf":
                 final_content_type = "pdf"
                 
@@ -216,17 +209,16 @@ def update_lesson(lesson_id: int, lesson_update: LessonCreate, session: Session 
 
 @router.delete("/lessons/{lesson_id}")
 def delete_lesson(lesson_id: int, session: Session = Depends(get_session)):
-    """Supprime une leçon ET son fichier associé sur Azure (Nettoyage complet)"""
     lesson = session.get(Lesson, lesson_id)
     if not lesson:
         raise HTTPException(status_code=404, detail="Leçon introuvable")
     
-    # 1. Nettoyage Azure Blob Storage
+    # Nettoyage Azure Blob Storage
     # Si la leçon a un fichier attaché (PDF/Vidéo), on le supprime du Cloud
     if lesson.content_url:
         delete_file_from_blob(lesson.content_url)
     
-    # 2. Suppression BDD
+    # Suppression BDD
     session.delete(lesson)
     session.commit()
     
