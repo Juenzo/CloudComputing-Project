@@ -1,10 +1,8 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
-# Import de notre nouvelle config database
 from .database import create_db_and_tables
 
-# Import des routes
 from .routes import courses, storage, quiz
 
 # --- STARTUP EVENT ---

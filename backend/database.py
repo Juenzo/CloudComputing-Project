@@ -4,11 +4,11 @@ from dotenv import load_dotenv
 from urllib.parse import quote_plus
 from sqlmodel import create_engine, SQLModel, Session
 
-# --- 1. CHARGEMENT DU FICHIER .ENV ---
+# --- CHARGEMENT DU FICHIER .ENV ---
 env_path = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
-# --- 2. RÉCUPÉRATION DES VARIABLES ---
+# --- RÉCUPÉRATION DES VARIABLES ---
 server = os.getenv("sql_server_fqdn")
 database = os.getenv("sql_database_name")
 username = os.getenv("DB_USER")
@@ -17,21 +17,21 @@ password = os.getenv("DB_PASSWORD")
 if not password or not server:
     raise ValueError(f"Variables d'environnement manquantes. Vérifiez : {env_path}")
 
-# --- 3. CRÉATION DU MOTEUR (SQLModel) ---
+# --- CRÉATION DU MOTEUR (SQLModel) ---
 encoded_password = quote_plus(password)
 # On utilise pymssql comme pilote
 SQLALCHEMY_DATABASE_URL = f"mssql+pymssql://{username}:{encoded_password}@{server}/{database}"
 
-# echo=True permet de voir les requêtes SQL dans la console (utile pour le dev)
+# echo=True permet de voir les requêtes SQL dans la console
 engine = create_engine(SQLALCHEMY_DATABASE_URL, echo=True)
 
-# --- 4. DÉPENDANCE POUR L'API ---
+# --- DÉPENDANCE POUR L'API ---
 def get_session():
     """Cette fonction sera utilisée par les routes pour obtenir une session BDD"""
     with Session(engine) as session:
         yield session
 
-# --- 5. INITIALISATION DES TABLES ---
+# --- INITIALISATION DES TABLES ---
 def create_db_and_tables():
     # C'est ici que SQLModel crée les tables si elles n'existent pas
     SQLModel.metadata.create_all(engine)

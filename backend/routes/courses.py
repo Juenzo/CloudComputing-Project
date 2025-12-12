@@ -133,18 +133,17 @@ def create_lesson(
             elif ext in ["mp4", "mov", "avi"]:
                 mime_type = "video/mp4" # ou adapté selon l'extension
             
-            # 1. Lecture du fichier
+            # Lecture du fichier
             print("Lecture du fichier en cours...") 
             file_content = file.file.read()
             print(f"Fichier lu ({len(file_content)} octets). Envoi vers Azure avec type {mime_type}...")
 
-            # 2. Upload AVEC le content_type
+            # Upload AVEC le content_type
             upload_file_to_blob(file_content, unique_filename, content_type=mime_type)
             print("Upload Azure RÉUSSI !")
 
             final_content_url = unique_filename
 
-            # ... (la suite pour final_content_type reste inchangée)
             if ext == "pdf":
                 final_content_type = "pdf"
                 
@@ -191,8 +190,6 @@ def get_lesson_details(lesson_id: int, session: Session = Depends(get_session)):
     
     response = lesson.model_dump()
     
-    # Si la leçon contient un fichier stocké sur Azure (content_url)
-    # On ne signe QUE si c'est un blob interne (pas une URL http(s))
     if lesson.content_url and not str(lesson.content_url).lower().startswith(("http://", "https://")):
         signed_url = generate_sas_url(lesson.content_url)
         response["content_url_signed"] = signed_url
@@ -221,12 +218,12 @@ def delete_lesson(lesson_id: int, session: Session = Depends(get_session)):
     if not lesson:
         raise HTTPException(status_code=404, detail="Leçon introuvable")
     
-    # 1. Nettoyage Azure Blob Storage
+    # Nettoyage Azure Blob Storage
     # Si la leçon a un fichier attaché (PDF/Vidéo), on le supprime du Cloud
     if lesson.content_url:
         delete_file_from_blob(lesson.content_url)
     
-    # 2. Suppression BDD
+    # Suppression BDD
     session.delete(lesson)
     session.commit()
     

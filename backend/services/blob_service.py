@@ -2,9 +2,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions, ContentSettings
 
-CONNECTION_STRING = os.getenv("STORAGE_ACCOUNT_CONNECTION_STRING") # A rajouter dans tes outputs Terraform ou .env manuellement pour le dev local
-# En prod (Azure App Service), on utilise souvent l'identité gérée, mais la connection string est plus simple pour ce projet.
-# Si tu n'as pas la connection string complète, tu peux la construire avec STORAGE_ACCOUNT_NAME et KEY.
+CONNECTION_STRING = os.getenv("STORAGE_ACCOUNT_CONNECTION_STRING")
 
 CONTAINER_NAME = os.getenv("content_container_name", "content")
 ACCOUNT_NAME = os.getenv("storage_account_name")

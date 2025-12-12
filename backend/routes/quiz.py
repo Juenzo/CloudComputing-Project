@@ -31,20 +31,19 @@ class FullQuizCreate(QuizCreate):
 @router.post("/courses/{course_id}/quiz", response_model=QuizRead)
 def create_full_quiz(course_id: int, quiz_data: FullQuizCreate, session: Session = Depends(get_session)):
     """
-    Crée un Quiz complet d'un coup (Quiz + Questions + Choix).
-    C'est très puissant pour le frontend (un seul appel).
+    Création optimisée d'un quiz et de ses questions en une seule transaction.
     """
     course = session.get(Course, course_id)
     if not course:
         raise HTTPException(status_code=404, detail="Cours introuvable")
 
-    # 1. Création du Quiz
+    # Création du Quiz
     db_quiz = Quiz(title=quiz_data.title, description=quiz_data.description, order=quiz_data.order, course_id=course_id)
     session.add(db_quiz)
     session.commit()
     session.refresh(db_quiz)
 
-    # 2. Création des Questions et Choix
+    # Création des Questions et Choix
     for q_data in quiz_data.questions:
         db_question = QuizQuestion(text=q_data.text, points=q_data.points, quiz_id=db_quiz.id)
         session.add(db_question)

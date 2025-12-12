@@ -42,4 +42,4 @@ finally {
     Pop-Location
 }
 
-Write-Host "`n--- TOUS LES TESTS SONT PASSÉS ! BRAVO ! ---" -ForegroundColor Cyan
+Write-Host "`n TOUS LES TESTS SONT PASSÉS !" -ForegroundColor Cyan
