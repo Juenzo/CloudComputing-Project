@@ -27,13 +27,11 @@ def create_slug(title: str) -> str:
 
 @router.get("/courses", response_model=List[CourseRead])
 def list_courses(session: Session = Depends(get_session)):
-    """Liste tous les cours disponibles"""
     courses = session.exec(select(Course)).all()
     return courses
 
 @router.post("/courses", response_model=CourseRead)
 def create_course(course: CourseCreate, session: Session = Depends(get_session)):
-    """Crée un nouveau cours (juste les infos, pas de fichier ici)"""
     # Génération du slug si non fourni
     if not course.slug:
         course.slug = create_slug(course.title)
@@ -51,7 +49,6 @@ def create_course(course: CourseCreate, session: Session = Depends(get_session))
 
 @router.get("/courses/{slug_or_id}", response_model=CourseRead)
 def get_course(slug_or_id: str, session: Session = Depends(get_session)):
-    """Récupère un cours par son ID ou son SLUG"""
     if slug_or_id.isdigit():
         course = session.get(Course, int(slug_or_id))
     else:
@@ -63,7 +60,6 @@ def get_course(slug_or_id: str, session: Session = Depends(get_session)):
 
 @router.delete("/courses/{course_id}")
 def delete_course(course_id: int, session: Session = Depends(get_session)):
-    """Supprime un cours et ses leçons (Nettoyage des blobs géré en cascade si besoin)"""
     course = session.get(Course, course_id)
     if not course:
         raise HTTPException(status_code=404, detail="Cours introuvable")
@@ -82,7 +78,6 @@ def delete_course(course_id: int, session: Session = Depends(get_session)):
 
 @router.get("/courses/{course_id}/lessons", response_model=List[LessonRead])
 def list_lessons_for_course(course_id: int, session: Session = Depends(get_session)):
-    """Liste les leçons d'un cours, triées par ordre"""
     # Vérif si le cours existe
     course = session.get(Course, course_id)
     if not course:
@@ -125,13 +120,12 @@ def create_lesson(
             unique_filename = f"{uuid.uuid4()}.{ext}"
 
             # Détermination du Content-Type pour Azure
-            mime_type = file.content_type # FastAPI nous donne souvent le bon type
+            mime_type = file.content_type
             
-            # Forçage manuel si besoin pour être sûr
             if ext == "pdf":
                 mime_type = "application/pdf"
             elif ext in ["mp4", "mov", "avi"]:
-                mime_type = "video/mp4" # ou adapté selon l'extension
+                mime_type = "video/mp4"
             
             # Lecture du fichier
             print("Lecture du fichier en cours...") 
@@ -180,10 +174,6 @@ def create_lesson(
 
 @router.get("/lessons/{lesson_id}")
 def get_lesson_details(lesson_id: int, session: Session = Depends(get_session)):
-    """
-    Récupère le contenu d'une leçon.
-    Si c'est un fichier Azure (Video/PDF), génère une URL signée temporaire.
-    """
     lesson = session.get(Lesson, lesson_id)
     if not lesson:
         raise HTTPException(status_code=404, detail="Leçon introuvable")
@@ -213,7 +203,6 @@ def update_lesson(lesson_id: int, lesson_update: LessonCreate, session: Session 
 
 @router.delete("/lessons/{lesson_id}")
 def delete_lesson(lesson_id: int, session: Session = Depends(get_session)):
-    """Supprime une leçon ET son fichier associé sur Azure (Nettoyage complet)"""
     lesson = session.get(Lesson, lesson_id)
     if not lesson:
         raise HTTPException(status_code=404, detail="Leçon introuvable")

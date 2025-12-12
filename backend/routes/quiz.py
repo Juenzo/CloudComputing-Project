@@ -59,10 +59,6 @@ def create_full_quiz(course_id: int, quiz_data: FullQuizCreate, session: Session
 
 @router.put("/courses/{course_id}/quiz", response_model=QuizRead)
 def replace_quiz_for_course(course_id: int, quiz_data: FullQuizCreate, session: Session = Depends(get_session)):
-    """
-    Remplace le quiz du cours (si existant) par celui fourni.
-    Stratégie simple: supprimer les quiz existants du cours puis recréer.
-    """
     course = session.get(Course, course_id)
     if not course:
         raise HTTPException(status_code=404, detail="Cours introuvable")
@@ -99,10 +95,6 @@ def list_quiz_for_course(course_id: int, session: Session = Depends(get_session)
 
 @router.get("/quiz/{quiz_id}")
 def get_quiz_details_for_student(quiz_id: int, session: Session = Depends(get_session)):
-    """
-    Récupère le quiz avec ses questions et choix, MAIS cache 'is_correct'.
-    (L'étudiant ne doit pas voir les réponses dans le JSON !)
-    """
     quiz = session.get(Quiz, quiz_id)
     if not quiz:
         raise HTTPException(status_code=404, detail="Quiz introuvable")
@@ -139,10 +131,6 @@ def get_quiz_details_for_student(quiz_id: int, session: Session = Depends(get_se
 
 @router.get("/quiz/{quiz_id}/full")
 def get_quiz_details_for_editor(quiz_id: int, session: Session = Depends(get_session)):
-    """
-    Récupère le quiz avec ses questions et choix, en INCLUANT is_correct.
-    Utile pour l'éditeur/administration afin de pré-remplir le formulaire.
-    """
     quiz = session.get(Quiz, quiz_id)
     if not quiz:
         raise HTTPException(status_code=404, detail="Quiz introuvable")
@@ -181,7 +169,6 @@ class UserAnswer(BaseModel):
 
 @router.post("/quiz/{quiz_id}/submit")
 def submit_quiz(quiz_id: int, answers: List[UserAnswer], session: Session = Depends(get_session)):
-    """Vérifie les réponses et calcule le score final"""
     quiz = session.get(Quiz, quiz_id)
     if not quiz:
         raise HTTPException(status_code=404, detail="Quiz introuvable")
@@ -230,7 +217,6 @@ def submit_quiz(quiz_id: int, answers: List[UserAnswer], session: Session = Depe
 
 @router.delete("/quiz/{quiz_id}")
 def delete_quiz(quiz_id: int, session: Session = Depends(get_session)):
-    """Supprime un quiz (les questions et réponses seront supprimées en cascade par la BDD)"""
     quiz = session.get(Quiz, quiz_id)
     if not quiz:
         raise HTTPException(status_code=404, detail="Quiz introuvable")
