@@ -78,7 +78,7 @@ terraform apply
 ./add_ip_to_azure.ps1
 ```
 
-4. Connectez-vous directement à Azure Portal pour récupérer une clé d'accès au blob de stockage précedemment crée, puis ajouter la au fichier .env (Compte de Stockage > Sécurité + Reseau > Clés d'accès)
+4. Connectez-vous directement à Azure Portal pour récupérer une clé d'accès au blob de stockage précedemment crée ou lançant la commande "az storage account keys list --resource-group rg-elearning --account-name storagelearning --query "[0].value" -o tsv" dans votre terminal, puis ajouter la au fichier .env (Compte de Stockage > Sécurité + Reseau > Clés d'accès)
 
 5. Modifier dans le fichier frontend/.env.production la variable `REACT_APP_API_BASE_URL` par votre nouvelle variable `api_url` (trouvable dans les outputs de terraform)
 
@@ -113,7 +113,7 @@ pip install requirements.txt
 uvicorn backend.main:app --reload
 ```
 
-3. Dans une deuxième terminal lancer le frontend en local :
+3. Dans un deuxième terminal lancer le frontend en local :
 ```bash
 cd frontend
 npm install

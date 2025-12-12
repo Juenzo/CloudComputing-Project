@@ -7,7 +7,7 @@ variable "resource_group_name" {
 variable "location" {
   type        = string
   description = "Région Azure (DOIT être autorisée sur ta souscription)"
-  default     = "switzerlandnorth"
+  default     = "norwayeast"
 }
 
 variable "storage_account_name" {

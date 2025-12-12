@@ -53,7 +53,6 @@ const CourseCreatePage: React.FC = () => {
     setLoading(true);
 
     try {
-      // 👉 Prépare le payload JSON attendu par FastAPI (CourseCreate)
       const payload: CreateCoursePayload = {
         title: form.title,
         description: form.description,
@@ -91,7 +90,6 @@ const CourseCreatePage: React.FC = () => {
       }
 
       const created: CourseResponse = await res.json();
-      // Redirection vers la page de détail du cours (id numérique côté backend)
       navigate(`/courses/${created.id}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Erreur inconnue";

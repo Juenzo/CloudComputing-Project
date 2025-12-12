@@ -112,7 +112,7 @@ class QuizChoice(QuizChoiceBase, table=True):
 class QuizChoiceRead(SQLModel):
     id: int
     text: str 
-    # Note : On n'envoie PAS is_correct au front-end pour éviter la triche !
+    # On n'envoie PAS is_correct au front-end pour éviter la triche !
 
 # --- Mises à jour des modèles de lecture imbriqués ---
 # Ces classes permettent de lire un Quiz avec ses questions d'un coup

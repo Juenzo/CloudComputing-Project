@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from pydantic import BaseModel
@@ -13,7 +13,7 @@ from models import (
 
 router = APIRouter()
 
-# --- MODÈLES DE CRÉATION IMBRIQUÉS (Pour simplifier la vie du Frontend) ---
+# --- MODÈLES DE CRÉATION IMBRIQUÉS ---
 class ChoicePayload(BaseModel):
     text: str
     is_correct: bool

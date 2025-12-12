@@ -33,15 +33,15 @@ $BuildDir = "build"
 $ContainerName = "`$web"
 # =========================
 
-# 1️⃣ Aller dans le dossier frontend, installer et builder l'application
+# Aller dans le dossier frontend, installer et builder l'application
 Write-Host "Préparation et construction du Frontend..." -ForegroundColor Yellow
 
 Push-Location $FrontendPath
 try {
-    Write-Host "Installation des dépendances (npm ci)..."
+    Write-Host "Installation des dépendances"
     npm ci 
 
-    Write-Host "Construction du projet (npm run build)..."
+    Write-Host "Construction du projet"
     npm run build
 }
 finally {
@@ -49,11 +49,11 @@ finally {
 }
 
 if (-not (Test-Path -Path (Join-Path $FrontendPath $BuildDir) -PathType Container)) {
-    Write-Host "❌ Erreur: Le dossier '$BuildDir' n'a pas été trouvé. Le build React a échoué." -ForegroundColor Red
+    Write-Host "Erreur: Le dossier '$BuildDir' n'a pas été trouvé. Le build React a échoué." -ForegroundColor Red
     exit 1
 }
 
-# 2️⃣ Se connecter à Azure
+# Se connecter à Azure
 Write-Host "Connexion à Azure..." -ForegroundColor Yellow
 az account show > $null 2>&1
 if ($LASTEXITCODE -ne 0) {
@@ -71,7 +71,7 @@ az storage blob upload-batch `
     --overwrite
 
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "✅ Déploiement du Frontend terminé !" -ForegroundColor Green
+    Write-Host "Déploiement du Frontend terminé !" -ForegroundColor Green
     
     $WebAppUrl = az storage account show `
         --name $StorageAccountName `
@@ -81,5 +81,5 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "URL du Frontend : $WebAppUrl" -ForegroundColor Green
 
 } else {
-    Write-Host "❌ Erreur lors du déploiement du Frontend." -ForegroundColor Red
+    Write-Host "Erreur lors du déploiement du Frontend." -ForegroundColor Red
 }

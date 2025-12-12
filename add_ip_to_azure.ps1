@@ -4,12 +4,12 @@ $SqlFQDN = (terraform output -raw sql_server_fqdn).Trim()
 $SqlServerName = $SqlFQDN.Split('.')[0]
 Pop-Location
 
-# 2. Détecter votre IP publique actuelle
+# Détection de votre IP publique actuelle
 Write-Host "Détection de votre IP publique..." -ForegroundColor Yellow
 $MyIp = (Invoke-WebRequest -Uri "https://api.ipify.org").Content
 Write-Host "Votre IP est : $MyIp" -ForegroundColor Cyan
 
-# 3. Créer la règle pare-feu
+# Création de la règle pare-feu
 Write-Host "Ajout de la règle pare-feu sur Azure..." -ForegroundColor Yellow
 az sql server firewall-rule create `
     --resource-group $RgName `
